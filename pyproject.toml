@@ -1,0 +1,28 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
+## #######
+# PROJECT
+## #######
+[project]
+name = "dll-etl-robocopy"
+version = "1.0.0"
+description = "thin python API for Window's robocopy utility"
+readme = "README.md"
+requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [ "dll-etl-reusable" ]
+
+## #####
+# TOOL #
+## #####
+[tool.hatch]
+build.targets.wheel.packages = [ "dll_etl" ]
+
+[tool.uv]
+sources.dll-etl-reusable = { workspace = true }
