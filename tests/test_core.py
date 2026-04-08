@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,23 +8,23 @@ from dll_etl.robocopy.core import RobocopyError, _handle_rc, robocopy
 
 def test_handle_rc_success():
     """Verify bitwise success codes."""
-    assert _handle_rc(1, "out", "") == 1
-    assert _handle_rc(3, "out", "") == 3
-    assert _handle_rc(7, "out", "") == 7
+    assert _handle_rc(Path("."), 1, "out", "") == 1
+    assert _handle_rc(Path("."), 3, "out", "") == 3
+    assert _handle_rc(Path("."), 7, "out", "") == 7
 
 
 def test_handle_rc_no_files():
     """Verify exit code 0 raises NothingToLoadError."""
     with pytest.raises(NothingToLoadError, match=r"No files were copied\."):
-        _handle_rc(0, "out", "")
+        _handle_rc(Path("."), 0, "out", "")
 
 
 def test_handle_rc_errors():
     """Verify exit codes >= 8 raise RobocopyError."""
     with pytest.raises(RobocopyError, match="Some files failed to copy"):
-        _handle_rc(8, "out", "")
+        _handle_rc(Path("."), 8, "out", "")
     with pytest.raises(RobocopyError, match="Serious error"):
-        _handle_rc(16, "out", "")
+        _handle_rc(Path("."), 16, "out", "")
 
 
 def test_robocopy_src_not_exists():
