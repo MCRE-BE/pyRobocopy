@@ -39,6 +39,7 @@ ROBOCOPY_EXIT_CODES = {
 
 
 def _handle_rc(
+    src: Path,
     rc: int,
     stdout: str,
     stderr: str,
@@ -47,7 +48,7 @@ def _handle_rc(
     # 0x10 : 16: Serious error (usage error, access rights, path not found).
     if rc >= 16:
         reason = "Serious error (path not found, access rights, or usage error)"
-        err_msg = f"Robocopy failed with exit code {rc} ({reason})"
+        err_msg = f"{src.stem} - Robocopy failed with exit code {rc} ({reason})"
         log.error(f"{err_msg}:\n{stderr or stdout}")
         raise RobocopyError(err_msg)
 
@@ -55,23 +56,23 @@ def _handle_rc(
     if rc >= 8:
         reason = "Some files failed to copy (retry limit exceeded?)"
         err_msg = f"Robocopy completion with errors (code {rc}): {reason}"
-        log.error(f"{err_msg}:\n{stderr or stdout}")
+        log.error(f"{src.stem} - {err_msg}:\n{stderr or stdout}")
         raise RobocopyError(err_msg)
 
     # 0x00 : 0 : No files copied.
     if rc == 0:
-        raise NothingToLoadError("No files were copied.")
+        raise NothingToLoadError(f"{src.stem} - No files were copied.")
 
     # 0x01, 0x02, 0x04 bits are success flavors
     success_reasons = []
     if rc & 1:
-        success_reasons.append("Files copied")
+        success_reasons.append(f"{src.stem} - Files copied")
     if rc & 2:
-        success_reasons.append("Extra files detected")
+        success_reasons.append(f"{src.stem} - Extra files detected")
     if rc & 4:
-        success_reasons.append("Mismatched files detected")
+        success_reasons.append(f"{src.stem} - Mismatched files detected")
 
-    log.debug(f"Robocopy success (code {rc}): {', '.join(success_reasons)}")
+    log.debug(f"{src.stem} - Robocopy success (code {rc}): {', '.join(success_reasons)}")
     return rc
 
 
@@ -173,9 +174,10 @@ def robocopy(
         errors="replace",
     )
     _handle_rc(
-        result.returncode,
-        result.stdout,
-        result.stderr,
+        src=Path(src),
+        rc=result.returncode,
+        stdout=result.stdout,
+        stderr=result.stderr,
     )
 
     lines = [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
