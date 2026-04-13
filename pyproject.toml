@@ -6,7 +6,7 @@ requires = [ "hatchling" ]
 # PROJECT
 ## #######
 [project]
-name = "dll-etl-robocopy"
+name = "pyrobocopy"
 version = "1.0.2"
 description = "thin python API for Window's robocopy utility"
 readme = "README.md"
@@ -16,13 +16,10 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = [ "dll-etl-reusable" ]
+dependencies = [ "tqdm>=4.64" ]
 
 ## #####
 # TOOL #
 ## #####
 [tool.hatch]
-build.targets.wheel.packages = [ "dll_etl" ]
-
-[tool.uv]
-sources.dll-etl-reusable = { workspace = true }
+build.targets.wheel.packages = [ "robocopy" ]

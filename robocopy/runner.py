@@ -4,38 +4,15 @@
 ####################
 # Import Statement #
 ####################
-import inspect
+import logging
 import subprocess
-from pathlib import Path
 
-from dll_etl.reusable import NothingToLoadError, logger
 from tqdm.auto import tqdm
 
 from .config import RobocopyConfig
+from .error import NothingToLoadError
 from .parser import RobocopyParser
 from .types import RobocopyResult, RobocopyStatistics, StatRow
-
-
-##########
-# HELPER #
-##########
-def _get_caller_name() -> str:
-    """Identify the name of the script calling this module.
-
-    Returns
-    -------
-    str
-        The stem of the calling filename.
-    """
-    stack = inspect.stack()
-    current_module = inspect.getmodule(stack[0])
-    for frame_info in stack[1:]:
-        module = inspect.getmodule(frame_info.frame)
-        if module and module != current_module:
-            if hasattr(module, "__file__") and module.__file__:
-                return Path(module.__file__).stem
-            return module.__name__
-    return "Unknown"
 
 
 ###########
@@ -50,11 +27,9 @@ class RobocopyRunner:
         The configuration for the copy operation.
     """
 
-    def __init__(self, config: RobocopyConfig):
+    def __init__(self, config: RobocopyConfig, logger: logging.Logger | None = None):
         self.config = config
-        self.log = logger.bind(
-            logger_name=f"{_get_caller_name()}>robocopy",
-        )
+        self.log = logger or logging.getLogger("robocopy")
 
     def discover_totals(self) -> int:
         """Run a dry-run with high parallelism to find total file count.

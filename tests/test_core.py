@@ -1,74 +1,92 @@
-####################
-# Import Statement #
-####################
+"""Tests for the modernized robocopy library."""
+
+import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from dll_etl.reusable import NothingToLoadError
-from dll_etl.robocopy.core import RobocopyError, _handle_rc, robocopy
-
+from robocopy import (
+    NothingToLoadError,
+    RobocopyConfig,
+    RobocopyRunner,
+    robocopy,
+)
 
 # ==================== #
-# Cross-Platform Tests #
+# Functional API Tests #
 # ==================== #
-def test_handle_rc_success():
-    """Verify bitwise success codes."""
-    assert _handle_rc(Path("."), 1, "out", "") == 1
-    assert _handle_rc(Path("."), 3, "out", "") == 3
-    assert _handle_rc(Path("."), 7, "out", "") == 7
-
-
-def test_handle_rc_no_files():
-    """Verify exit code 0 raises NothingToLoadError."""
-    with pytest.raises(NothingToLoadError, match=r"No files were copied\."):
-        _handle_rc(Path("."), 0, "out", "")
-
-
-def test_handle_rc_errors():
-    """Verify exit codes >= 8 raise RobocopyError."""
-    with pytest.raises(RobocopyError, match="Some files failed to copy"):
-        _handle_rc(Path("."), 8, "out", "")
-    with pytest.raises(RobocopyError, match="Serious error"):
-        _handle_rc(Path("."), 16, "out", "")
 
 
 def test_robocopy_src_not_exists():
     """Verify robocopy fails if source is missing."""
     with (
         patch("pathlib.Path.exists", return_value=False),
-        pytest.raises(NothingToLoadError, match=r"Source directory .* does not exist"),
+        pytest.raises(NothingToLoadError, match=r"Source .* does not exist"),
     ):
         robocopy("non_existent_src", "dst")
 
 
-def test_robocopy_calls_subprocess():
-    """Verify robocopy builds command and calls subprocess.run."""
-    with patch("pathlib.Path.exists", return_value=True), patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=1, stdout="Copied", stderr="")
+def test_robocopy_calls_runner():
+    """Verify the functional wrapper correctly initializes the runner."""
+    with patch("pathlib.Path.exists", return_value=True), patch("robocopy.RobocopyRunner.run") as mock_run:
+        mock_run.return_value = MagicMock(exit_code=1, stats=MagicMock(files=MagicMock(total=5)))
 
-        # Use specific flags to check they are included
-        rc = robocopy("src", "dst", exclude_older=True, restartable=True)
+        status = robocopy("src", "dst", threads=8)
 
-        assert rc == 1
-        args = mock_run.call_args[0][0]
-        assert "robocopy" in args
-        assert "src" in args
-        assert "dst" in args
-        assert "/XO" in args  # exclude_older
-        assert "/Z" in args  # restartable
-        assert "/MT:16" in args  # default threads
+        assert status == 1
+        mock_run.assert_called_once()
 
 
-def test_robocopy_extra_flags_and_excludes():
-    """Verify extra flags and file exclusions are correctly handled."""
-    with patch("pathlib.Path.exists", return_value=True), patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=1, stdout="Copied", stderr="")
+def test_robocopy_no_files_found():
+    """Verify that if exit code is 0 but 0 files were found, NothingToLoadError is raised."""
+    with patch("pathlib.Path.exists", return_value=True), patch("robocopy.RobocopyRunner.run") as mock_run:
+        # Mocking result: exit_code 0, but total files 0
+        mock_result = MagicMock()
+        mock_result.exit_code = 0
+        mock_result.stats.files.total = 0
+        mock_run.return_value = mock_result
 
-        robocopy("src", "dst", exclude_files=["f1.txt", "f2.log"], extra_flags=["/XJ"])
+        with pytest.raises(NothingToLoadError, match="No files found to copy"):
+            robocopy("src", "dst")
 
-        args = mock_run.call_args[0][0]
-        assert "/XF" in args
-        assert "f1.txt" in args
-        assert "f2.log" in args
-        assert "/XJ" in args
+
+# ==================== #
+# Runner Class Tests   #
+# ==================== #
+
+
+def test_runner_logger_injection():
+    """Verify that a custom logger can be passed to the runner."""
+    custom_logger = logging.getLogger("custom_test_logger")
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+
+    runner = RobocopyRunner(config=config, logger=custom_logger)
+
+    assert runner.log == custom_logger
+
+
+def test_runner_default_logger():
+    """Verify defaults to 'robocopy' logger if none provided."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    assert runner.log.name == "robocopy"
+
+
+def test_runner_run_execution():
+    """Test the core run execution calling subprocess.Popen."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    with patch("pathlib.Path.exists", return_value=True), patch("subprocess.Popen") as mock_popen:
+        # Setting up mock for Popen
+        process_mock = MagicMock()
+        process_mock.stdout = []
+        process_mock.returncode = 1
+        process_mock.__enter__.return_value = process_mock
+        mock_popen.return_value = process_mock
+
+        result = runner.run()
+
+        assert result.exit_code == 1
+        assert mock_popen.called

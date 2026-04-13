@@ -1,4 +1,4 @@
-# Robocopy Wrapper Library
+# pyRobocopy
 
 A high-performance, object-oriented Python wrapper for the Windows `robocopy` utility. This library is designed to replace slow Python-level file synchronization with fast, robust, OS-level execution.
 
@@ -12,7 +12,7 @@ A high-performance, object-oriented Python wrapper for the Windows `robocopy` ut
 
 ## Installation
 
-This library is part of the `dll_etl` ecosystem. Ensure the `libs/robocopy` directory is in your `PYTHONPATH`.
+This library provides a high-level API for Robocopy. Ensure the `robocopy` directory is in your `PYTHONPATH`.
 
 ```bash
 pip install tqdm loguru  # Core dependencies

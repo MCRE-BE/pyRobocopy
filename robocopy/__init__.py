@@ -2,6 +2,7 @@
 
 __all__ = [
     "robocopy",
+    "NothingToLoadError",
     "RobocopyError",
     "RobocopyConfig",
     "RobocopyRunner",
@@ -13,6 +14,8 @@ __all__ = [
     "LoggingOptions",
     "RobocopyStatus",
     "StatRow",
+    "RobocopyStatus",
+    "StatRow",
     "RobocopyParser",
 ]
 
@@ -20,9 +23,10 @@ __all__ = [
 ####################
 # Import Statement #
 ####################
+import logging
 from pathlib import Path
 
-from dll_etl.reusable import NothingToLoadError
+from .error import NothingToLoadError
 
 from .config import (
     CopyOptions,
@@ -54,6 +58,7 @@ def robocopy(
     extra_flags: list[str] | None = None,
     progress: bool = False,
     smart_progress: bool = False,
+    logger: logging.Logger | None = None,
 ) -> int:
     """Functional wrapper for the OO Robocopy system.
 
@@ -83,6 +88,8 @@ def robocopy(
         Enables progress display.
     smart_progress : bool
         Enables discovery-based percentage progress bar.
+    logger : logging.Logger, optional
+        Custom logger to use for output.
 
     Returns
     -------
@@ -107,6 +114,7 @@ def robocopy(
 
     runner = RobocopyRunner(
         config=config,
+        logger=logger,
     )
     result = runner.run(
         smart_progress=(progress or smart_progress),
