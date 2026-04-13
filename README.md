@@ -23,7 +23,7 @@ pip install tqdm loguru  # Core dependencies
 The simplest way to use the library is the `robocopy` convenience function, which maintains backward compatibility for standard sync tasks.
 
 ```python
-from dll_etl.robocopy import robocopy
+from robocopy import robocopy
 
 # Simple sync with a smart progress bar
 robocopy(
@@ -40,7 +40,7 @@ For complex synchronization tasks, use the `RobocopyRunner` and `RobocopyConfig`
 
 ### 1. Configure via Dataclasses
 ```python
-from dll_etl.robocopy import RobocopyConfig, RobocopyRunner
+from robocopy import RobocopyConfig, RobocopyRunner
 
 config = RobocopyConfig(source="C:/data", destination="D:/backup")
 config.copy.mirror = True
