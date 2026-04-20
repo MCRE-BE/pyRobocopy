@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # pyRobocopy
 
 A high-performance, object-oriented Python wrapper for the Windows `robocopy` utility. This library is designed to replace slow Python-level file synchronization with fast, robust, OS-level execution.

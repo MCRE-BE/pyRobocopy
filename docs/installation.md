@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Installation
 
 This library provides a high-level API for Robocopy. 
