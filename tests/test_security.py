@@ -40,9 +40,7 @@ def test_validate_null_byte_in_source():
 
 def test_validate_newline_in_destination():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst\nmore"))
-    with pytest.raises(
-        ValueError, match="destination path contains invalid characters"
-    ):
+    with pytest.raises(ValueError, match="destination path contains invalid characters"):
         config.to_args()
 
 
@@ -55,16 +53,12 @@ def test_validate_null_byte_in_files():
 def test_validate_null_byte_in_exclude_files():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     config.selection.exclude_files = ["fine.txt", "bad\0.txt"]
-    with pytest.raises(
-        ValueError, match="exclude_files item 'bad\x00.txt' contains invalid characters"
-    ):
+    with pytest.raises(ValueError, match=r"exclude_files item 'bad\x00.txt' contains invalid characters"):
         config.to_args()
 
 
 def test_validate_newline_in_exclude_dirs():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     config.selection.exclude_dirs = ["dir\n1", "dir2"]
-    with pytest.raises(
-        ValueError, match="exclude_dirs item 'dir\n1' contains invalid characters"
-    ):
+    with pytest.raises(ValueError, match="exclude_dirs item 'dir\n1' contains invalid characters"):
         config.to_args()
