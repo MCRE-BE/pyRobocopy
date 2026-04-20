@@ -171,13 +171,13 @@ class RobocopyConfig:
                 raise ValueError(f"{attr} path cannot be empty")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
-                    f"{attr} path contains invalid characters (null byte or newline)",
+                    f"{attr} path contains invalid characters",
                 )
 
         # Validate file filter
         if "\0" in self.files or "\n" in self.files or "\r" in self.files:
             raise ValueError(
-                "File filter contains invalid characters (null byte or newline)",
+                "File filter contains invalid characters",
             )
 
         # Validate exclusions
@@ -188,7 +188,7 @@ class RobocopyConfig:
             for item in items:
                 if "\0" in item or "\n" in item or "\r" in item:
                     raise ValueError(
-                        f"{attr} item '{item}' contains invalid characters (null byte or newline)",
+                        f"{attr} item '{item}' contains invalid characters",
                     )
 
     @classmethod
@@ -287,6 +287,7 @@ class RobocopyConfig:
         list[str]
             A list of command-line arguments compatible with subprocess.
         """
+        self.validate()
         args = [
             "robocopy",
             str(self.source),
