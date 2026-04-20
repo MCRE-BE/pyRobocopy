@@ -13,11 +13,10 @@ from robocopy import (
     robocopy,
 )
 
+
 # ==================== #
 # Functional API Tests #
 # ==================== #
-
-
 def test_robocopy_src_not_exists():
     """Verify robocopy fails if source is missing."""
     with (
@@ -66,8 +65,6 @@ def test_robocopy_no_files_found():
 # ==================== #
 # Runner Class Tests   #
 # ==================== #
-
-
 def test_runner_logger_injection():
     """Verify that a custom logger can be passed to the runner."""
     custom_logger = logging.getLogger("custom_test_logger")
