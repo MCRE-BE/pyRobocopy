@@ -9,6 +9,33 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
 
+####################
+# Global Variables #
+####################
+# Mapping of simple boolean flags to their configuration attribute paths
+_BOOLEAN_FLAGS: dict[str, tuple[str, str]] = {
+    "/S": ("copy", "subdirs"),
+    "/E": ("copy", "empty_subdirs"),
+    "/Z": ("copy", "restartable"),
+    "/B": ("copy", "backup_mode"),
+    "/FFT": ("copy", "fat_file_times"),
+    "/PURGE": ("copy", "purge"),
+    "/XO": ("selection", "exclude_older"),
+    "/XX": ("selection", "exclude_extra"),
+    "/V": ("logging", "verbose"),
+    "/NFL": ("logging", "no_file_list"),
+    "/NDL": ("logging", "no_dir_list"),
+}
+
+# Mapping of flags with prefixes (like /MT:8) to their config paths and types
+_PREFIX_FLAGS: dict[str, tuple[tuple[str, str], type]] = {
+    "/MT:": (("copy", "multi_threaded"), int),
+    "/COPY:": (("copy", "copy_flags"), str),
+    "/DCOPY:": (("copy", "dir_copy_flags"), str),
+    "/R:": (("retry_count", ""), int),
+    "/W:": (("retry_wait", ""), int),
+}
+
 
 ###########
 # CLASSES #
@@ -231,50 +258,33 @@ class RobocopyConfig:
         while i < len(tokens):
             token = tokens[i]
             t = token.upper()
-            if t == "/S":
-                config.copy.subdirs = True
-            elif t == "/E":
-                config.copy.empty_subdirs = True
-            elif t == "/Z":
-                config.copy.restartable = True
-            elif t == "/B":
-                config.copy.backup_mode = True
-            elif t.startswith("/MT:"):
-                config.copy.multi_threaded = int(t.split(":")[1])
-            elif t.startswith("/COPY:"):
-                config.copy.copy_flags = t.split(":")[1]
-            elif t.startswith("/DCOPY:"):
-                config.copy.dir_copy_flags = t.split(":")[1]
-            elif t == "/FFT":
-                config.copy.fat_file_times = True
+
+            if t in _BOOLEAN_FLAGS:
+                path = _BOOLEAN_FLAGS[t]
+                if len(path) == 2:
+                    setattr(getattr(config, path[0]), path[1], True)
+                else:
+                    setattr(config, path[0], True)
             elif t == "/MIR":
                 config.copy.mirror = True
                 config.copy.empty_subdirs = True
                 config.copy.purge = True
-            elif t == "/PURGE":
-                config.copy.purge = True
-            elif t == "/XO":
-                config.selection.exclude_older = True
-            elif t == "/XX":
-                config.selection.exclude_extra = True
-            elif t == "/V":
-                config.logging.verbose = True
-            elif t == "/NFL":
-                config.logging.no_file_list = True
-            elif t == "/NDL":
-                config.logging.no_dir_list = True
             elif t == "/XF":
                 while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
                     i += 1
-                    config.selection.exclude_files.append(tokens[i])
-            elif t == "/XD":
                 while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
                     i += 1
                     config.selection.exclude_dirs.append(tokens[i])
-            elif t.startswith("/R:"):
-                config.retry_count = int(t.split(":")[1])
-            elif t.startswith("/W:"):
-                config.retry_wait = int(t.split(":")[1])
+            else:
+                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
+                    if t.startswith(prefix):
+                        val = type_func(t.split(":", 1)[1])
+                        if len(path) == 2:
+                            setattr(getattr(config, path[0]), path[1], val)
+                        else:
+                            setattr(config, path[0], val)
+                        break
+
             i += 1
 
         return config
