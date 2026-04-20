@@ -26,7 +26,7 @@ __all__ = [
 import logging
 from pathlib import Path
 
-from .error import NothingToLoadError
+from .error import NothingToLoadError, RobocopyError
 
 from .config import (
     CopyOptions,
@@ -38,7 +38,6 @@ from .parser import RobocopyParser
 from .runner import RobocopyRunner
 from .types import (
     FileResult,
-    RobocopyError,
     RobocopyResult,
     RobocopyStatistics,
     RobocopyStatus,
