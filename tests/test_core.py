@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from robocopy import (
     NothingToLoadError,
     RobocopyConfig,
@@ -28,9 +29,18 @@ def test_robocopy_src_not_exists():
 
 def test_robocopy_calls_runner():
     """Verify the functional wrapper correctly initializes the runner."""
-    with patch("pathlib.Path.exists", return_value=True), patch("robocopy.RobocopyRunner.run") as mock_run:
-        mock_run.return_value = MagicMock(exit_code=1, stats=MagicMock(files=MagicMock(total=5)))
-
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch(
+            "robocopy.RobocopyRunner.run",
+        ) as mock_run,
+    ):
+        mock_run.return_value = MagicMock(
+            exit_code=1,
+            stats=MagicMock(
+                files=MagicMock(total=5),
+            ),
+        )
         status = robocopy("src", "dst", threads=8)
 
         assert status == 1
@@ -39,7 +49,10 @@ def test_robocopy_calls_runner():
 
 def test_robocopy_no_files_found():
     """Verify that if exit code is 0 but 0 files were found, NothingToLoadError is raised."""
-    with patch("pathlib.Path.exists", return_value=True), patch("robocopy.RobocopyRunner.run") as mock_run:
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("robocopy.RobocopyRunner.run") as mock_run,
+    ):
         # Mocking result: exit_code 0, but total files 0
         mock_result = MagicMock()
         mock_result.exit_code = 0
@@ -78,7 +91,10 @@ def test_runner_run_execution():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
 
-    with patch("pathlib.Path.exists", return_value=True), patch("subprocess.Popen") as mock_popen:
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("subprocess.Popen") as mock_popen,
+    ):
         # Setting up mock for Popen
         process_mock = MagicMock()
         process_mock.stdout = []
