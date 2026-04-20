@@ -7,19 +7,6 @@
 - `pyRobocopy\GEMINI.md`
 - `ntfy_lite\GEMINI.md`
 
-## Subtree Sync Registry
-
-> [!TIP]
-> **Sync Policy**: We use a strict **NO-SQUASH** policy. See the [Subtree Sync Guide](../.gemini/SUBTREE_SYNC.md) for details on preventing history leaks and stability issues.
-
-| Monorepo Path | Standalone Repository | Sync Policy | Latest Sync |
-| :--- | :--- | :--- | :--- |
-| `libs/ntfy_lite` | `ntfy_lite` | **NO-SQUASH** | 2026-04-14 |
-| `libs/robocopy` | `pyRobocopy` | **NO-SQUASH** | 2026-04-14 |
-
-> [!IMPORTANT]
-> **Antigravity Instruction**: Always check this registry before performing any folder moves or updates between the monorepo and standalone packages. Use the shared `sync_subtrees.py` script to maintain bidirectional sync and avoid history leakage.
-
 ## Tech Stack & Tooling
 - **Language**: Python 3.13+ (unless specified otherwise).
 - **Environment**: Use `uv` for all dependency management and execution.
@@ -39,25 +26,23 @@
   - Use **Conventional Commits** (`feat:`, `fix:`, `docs:`, etc.).
   - **Branching**: Never commit directly to `master` or `main`. Use feature branches and merge-based workflows.
 
-## Shared Automation
-- **Sync Script**: `c:\Users\PBE00A26\Python_Code\.gemini\sync_subtrees.py`
-  - Use this script to keep the monorepo subtrees in sync with their standalone origins.
-
 ---
 
 ## Repository Specifics
 
 ### [1] dll-danda-ibp-scripts (Monorepo)
 - Core logic for ETL, IBPM, and Argos synchronization.
-- Contains shared `libs/` that are mirrored to standalone repos.
+- **Note**: This monorepo consumes `ntfy_lite` and `pyRobocopy` as external dependencies.
 
-### [2] pyRobocopy
+### [2] pyRobocopy (Standalone)
 - Windows-specific Robocopy wrapper.
-- **Note**: Decoupled from `dll_etl.reusable`.
+- Hosted at: `https://github.com/MCRE-BE/pyRobocopy.git`
+- **Installation**: `uv add git+https://github.com/MCRE-BE/pyRobocopy.git`
 
-### [3] ntfy_lite
+### [3] ntfy_lite (Standalone)
 - Minimalism Python API for ntfy.sh.
-- Features asynchronous buffering and retry logic.
+- Hosted at: `https://github.com/MCRE-BE/ntfy_lite.git`
+- **Installation**: `uv add git+https://github.com/MCRE-BE/ntfy_lite.git`
 
 ### [4] becse-adp-dllgsc
 - Data Product for BeCSE ADP Dllgsc.
