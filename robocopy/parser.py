@@ -57,7 +57,7 @@ class RobocopyParser:
             return None
 
         # Check for error codes
-        if match := self.error_re.search(line):
+        if "ERROR" in line and (match := self.error_re.search(line)):
             err_code = match.group(1)
             category = WINDOWS_ERROR_CODES.get(
                 err_code,
