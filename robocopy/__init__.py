@@ -14,8 +14,6 @@ __all__ = [
     "LoggingOptions",
     "RobocopyStatus",
     "StatRow",
-    "RobocopyStatus",
-    "StatRow",
     "RobocopyParser",
 ]
 
