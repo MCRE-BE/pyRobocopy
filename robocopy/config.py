@@ -7,6 +7,7 @@
 import shlex
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Self
 
 
 ###########
@@ -155,6 +156,41 @@ class RobocopyConfig:
     retry_count: int = 3
     retry_wait: int = 3
 
+    def validate(self: Self) -> None:
+        """Validate configuration for potential security issues and basic correctness.
+
+        Raises
+        ------
+        ValueError
+            If configuration is invalid or potentially dangerous.
+        """
+        # Validate paths
+        for attr, path in [("source", self.source), ("destination", self.destination)]:
+            path_str = str(path)
+            if not path_str.strip() or path_str == ".":
+                raise ValueError(f"{attr} path cannot be empty")
+            if "\0" in path_str or "\n" in path_str or "\r" in path_str:
+                raise ValueError(
+                    f"{attr} path contains invalid characters",
+                )
+
+        # Validate file filter
+        if "\0" in self.files or "\n" in self.files or "\r" in self.files:
+            raise ValueError(
+                "File filter contains invalid characters",
+            )
+
+        # Validate exclusions
+        for attr, items in [
+            ("exclude_files", self.selection.exclude_files),
+            ("exclude_dirs", self.selection.exclude_dirs),
+        ]:
+            for item in items:
+                if "\0" in item or "\n" in item or "\r" in item:
+                    raise ValueError(
+                        f"{attr} item '{item}' contains invalid characters",
+                    )
+
     @classmethod
     def from_command_line(cls, cmd_string: str) -> "RobocopyConfig":
         r"""Parse a raw robocopy command string into a RobocopyConfig object.
@@ -243,7 +279,7 @@ class RobocopyConfig:
 
         return config
 
-    def to_args(self) -> list[str]:
+    def to_args(self: Self) -> list[str]:
         """Convert this configuration into a list of robocopy arguments.
 
         Returns
@@ -251,6 +287,7 @@ class RobocopyConfig:
         list[str]
             A list of command-line arguments compatible with subprocess.
         """
+        self.validate()
         args = [
             "robocopy",
             str(self.source),
