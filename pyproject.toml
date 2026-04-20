@@ -27,5 +27,5 @@ build.targets.wheel.packages = [ "robocopy" ]
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
-    "ruff>=0.15.10",
+    "ruff>=0.15.11",
 ]
