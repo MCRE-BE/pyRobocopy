@@ -18,7 +18,7 @@ def test_discover_totals_arguments():
 
     mock_stdout = """
 -------------------------------------------------------------------------------
-   ROBOCOPY     ::     Robust File Copy for Windows                         
+   ROBOCOPY     ::     Robust File Copy for Windows
 -------------------------------------------------------------------------------
 
                Total    Copied   Skipped  Mismatch    FAILED    Extras

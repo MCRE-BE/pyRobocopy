@@ -109,9 +109,7 @@ def test_to_args_logging_options():
 
 
 def test_to_args_retry_options():
-    config = RobocopyConfig(
-        source=Path("src"), destination=Path("dst"), retry_count=10, retry_wait=5
-    )
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"), retry_count=10, retry_wait=5)
     args = config.to_args()
     assert "/R:10" in args
     assert "/W:5" in args
