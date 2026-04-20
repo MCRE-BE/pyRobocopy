@@ -17,10 +17,6 @@ if TYPE_CHECKING:
 ###########
 # CLASSES #
 ###########
-class RobocopyError(Exception):
-    """Exception raised when robocopy returns a failing exit code."""
-
-
 class RobocopyStatus(Enum):
     """Categorization of individual file/folder outcomes.
 
