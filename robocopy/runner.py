@@ -44,6 +44,8 @@ class RobocopyRunner:
         args.extend(
             [
                 "/L",
+                "/NFL",  # (No File List)
+                "/NDL",  # (No Directory List)
                 "/NJH",
                 "/R:0",
                 "/W:0",
@@ -172,7 +174,9 @@ class RobocopyRunner:
                 if parsed.startswith("Error"):
                     result.errors.append(parsed)
                 elif parsed == "SUMMARY_START":
-                    self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
+                    self.log.info(
+                        "[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras"
+                    )
                     continue
                 elif parser.stats_found and ":" in parsed:
                     self._parse_stat_row(
