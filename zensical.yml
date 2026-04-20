@@ -1,0 +1,50 @@
+site_name: pyRobocopy
+
+theme:
+  name: "material"
+  palette:
+    accent: indigo
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.footer
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+repo_url: https://github.com/MCRE-BE/pyRobocopy
+repo_name: MCRE-BE/pyRobocopy
+
+copyright: Copyright &copy; 2026 Mathias Creemers
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MCRE-BE/pyRobocopy
+
+extra_css:
+ - stylesheets/extra.css
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_submodules: true
+
+nav:
+ - Welcome: index.md
+ - Installation: installation.md
+ - Usage: usage.md
+ - Limitations: limitation.md
+ - API Reference: references.md
