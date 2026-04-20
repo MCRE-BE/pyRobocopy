@@ -1,3 +1,7 @@
+---
+hide:
+  - navigation
+---
 # Limitations and Performance
 
 ## Performance Note: Smart Progress
