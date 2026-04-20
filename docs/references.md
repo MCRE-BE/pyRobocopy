@@ -1,7 +1,3 @@
----
-hide:
-  - navigation
----
 # API Reference
 
 This page contains the auto-generated documentation for the `pyRobocopy` modules.

@@ -1,7 +1,3 @@
----
-hide:
-  - navigation
----
 # Usage
 
 ## Quick Start (Functional API)
