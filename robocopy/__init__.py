@@ -24,19 +24,17 @@ __all__ = [
 import logging
 from pathlib import Path
 
-from .error import NothingToLoadError
-
 from .config import (
     CopyOptions,
     LoggingOptions,
     RobocopyConfig,
     SelectionOptions,
 )
+from .error import NothingToLoadError, RobocopyError
 from .parser import RobocopyParser
 from .runner import RobocopyRunner
 from .types import (
     FileResult,
-    RobocopyError,
     RobocopyResult,
     RobocopyStatistics,
     RobocopyStatus,
