@@ -17,21 +17,24 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [ "tqdm>=4.64" ]
-
-[dependency-groups]
-dev = [
+optional-dependencies.dev = [
   "prek>0",
   "pytest>=9.0.3",
   "ruff>=0.15.11",
   "ty>0",
 ]
-test = [
-  "pytest>0",
-]
-docs = [
+optional-dependencies.docs = [
   "mkdocstrings[python]",
   "pymdown-extensions",
   "zensical",
+]
+optional-dependencies.test = [
+  "pytest>0",
+]
+
+[dependency-groups]
+dev = [
+  "pyrobocopy[dev,docs,test]",
 ]
 
 ## #####
