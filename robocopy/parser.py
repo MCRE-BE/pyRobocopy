@@ -37,7 +37,6 @@ class RobocopyParser:
     def __init__(self, config: RobocopyConfig):
         self.config = config
         self.stats_found = False
-        self.pct_re = re.compile(r"(\d+\.?\d*)%")
         self.error_re = re.compile(r"ERROR (\d+) \(0x[0-9A-Fa-f]+\)")
 
     def parse_line(self, line: str) -> FileResult | str | None:
