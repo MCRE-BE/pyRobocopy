@@ -1,5 +1,6 @@
-/* Custom styles for pyRobocopy documentation */
-
 :root {
-    --md-primary-fg-color: #3f51b5; /* Indigo */
+  --md-primary-fg-color:        #006C66;
+}
+.md-sidebar--secondary {
+  order: 0;
 }
