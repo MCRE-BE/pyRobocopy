@@ -316,7 +316,7 @@ wheels = [
 
 [[package]]
 name = "pyrobocopy"
-version = "1.0.2"
+version = "1.0.3"
 source = { editable = "." }
 dependencies = [
     { name = "tqdm" },
@@ -355,10 +355,10 @@ requires-dist = [
     { name = "ty", marker = "extra == 'dev'", specifier = ">0" },
     { name = "zensical", marker = "extra == 'docs'" },
 ]
-provides-extras = ["dev", "test", "docs"]
+provides-extras = ["dev", "docs", "test"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pyrobocopy", extras = ["dev", "test", "docs"] }]
+dev = [{ name = "pyrobocopy", extras = ["dev", "docs", "test"] }]
 
 [[package]]
 name = "pytest"
