@@ -117,6 +117,14 @@ def test_to_args_retry_options():
     assert "/W:5" in args
 
 
+def test_from_command_line_incomplete():
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
+        RobocopyConfig.from_command_line("robocopy")
+
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
+        RobocopyConfig.from_command_line("robocopy C:\\src")
+
+
 def test_from_command_line_basic():
     cmd = "robocopy src dst"
     config = RobocopyConfig.from_command_line(cmd)

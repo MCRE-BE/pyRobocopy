@@ -248,6 +248,9 @@ class RobocopyConfig:
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
+        if len(tokens) < 3:
+            raise ValueError("Command string must include source and destination paths")
+
         # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
