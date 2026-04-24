@@ -261,7 +261,7 @@ class RobocopyConfig:
 
             if t in _BOOLEAN_FLAGS:
                 path = _BOOLEAN_FLAGS[t]
-                if len(path) == 2:
+                if len(path) == 2 and path[1]:
                     setattr(getattr(config, path[0]), path[1], True)
                 else:
                     setattr(config, path[0], True)
@@ -275,15 +275,15 @@ class RobocopyConfig:
                 while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
                     i += 1
                     config.selection.exclude_dirs.append(tokens[i])
-            else:
-                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
-                    if t.startswith(prefix):
-                        val = type_func(t.split(":", 1)[1])
-                        if len(path) == 2:
-                            setattr(getattr(config, path[0]), path[1], val)
-                        else:
-                            setattr(config, path[0], val)
-                        break
+            elif ":" in t:
+                prefix = t.split(":", 1)[0] + ":"
+                if prefix in _PREFIX_FLAGS:
+                    path, type_func = _PREFIX_FLAGS[prefix]
+                    val = type_func(t.split(":", 1)[1])
+                    if len(path) == 2 and path[1]:
+                        setattr(getattr(config, path[0]), path[1], val)
+                    else:
+                        setattr(config, path[0], val)
 
             i += 1
 
