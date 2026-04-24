@@ -168,6 +168,7 @@ def test_runner_discover_totals_no_files_line():
 
         assert runner.discover_totals() == 0
 
+
 def test_runner_run_exception_handling():
     """Verify that exceptions during subprocess execution are caught and handled."""
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
