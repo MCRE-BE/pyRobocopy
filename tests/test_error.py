@@ -1,5 +1,3 @@
-import pytest
-
 from robocopy.error import NothingToLoadError, RobocopyError
 
 
