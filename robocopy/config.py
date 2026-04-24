@@ -4,10 +4,17 @@
 ####################
 # Import Statement #
 ####################
+from __future__ import annotations
+
 import shlex
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Self
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 ####################
 # Global Variables #
@@ -247,7 +254,12 @@ class RobocopyConfig:
         # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
-        files = tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
+
+        i = 3
+        files = "*.*"
+        if i < len(tokens) and not tokens[i].startswith("/"):
+            files = tokens[i]
+            i += 1
 
         config = cls(
             source=src,
@@ -255,14 +267,13 @@ class RobocopyConfig:
             files=files,
         )
 
-        i = 4
         while i < len(tokens):
             token = tokens[i]
             t = token.upper()
 
             if t in _BOOLEAN_FLAGS:
                 path = _BOOLEAN_FLAGS[t]
-                if len(path) == 2:
+                if path[1]:
                     setattr(getattr(config, path[0]), path[1], True)
                 else:
                     setattr(config, path[0], True)
@@ -273,6 +284,8 @@ class RobocopyConfig:
             elif t == "/XF":
                 while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
                     i += 1
+                    config.selection.exclude_files.append(tokens[i])
+            elif t == "/XD":
                 while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
                     i += 1
                     config.selection.exclude_dirs.append(tokens[i])
@@ -280,7 +293,7 @@ class RobocopyConfig:
                 for prefix, (path, type_func) in _PREFIX_FLAGS.items():
                     if t.startswith(prefix):
                         val = type_func(t.split(":", 1)[1])
-                        if len(path) == 2:
+                        if path[1]:
                             setattr(getattr(config, path[0]), path[1], val)
                         else:
                             setattr(config, path[0], val)
