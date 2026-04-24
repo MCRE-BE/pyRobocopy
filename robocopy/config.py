@@ -253,7 +253,7 @@ class RobocopyConfig:
         Returns the configured object and the index of the next token to parse.
         """
         if len(tokens) < 3:
-            raise ValueError("Command string missing required source and destination")
+            raise ValueError("Command string must include source and destination paths")
 
         src = Path(tokens[1])
         dst = Path(tokens[2])
@@ -286,7 +286,7 @@ class RobocopyConfig:
     def _apply_boolean_flag(self, flag: str) -> None:
         """Apply a simple boolean flag to the configuration."""
         path = _BOOLEAN_FLAGS[flag]
-        if len(path) == 2:
+        if path[1]:
             setattr(getattr(self, path[0]), path[1], True)
         else:
             setattr(self, path[0], True)
@@ -307,7 +307,7 @@ class RobocopyConfig:
         for prefix, (path, type_func) in _PREFIX_FLAGS.items():
             if flag.startswith(prefix):
                 val = type_func(flag.split(":", 1)[1])
-                if len(path) == 2:
+                if path[1]:
                     setattr(getattr(self, path[0]), path[1], val)
                 else:
                     setattr(self, path[0], val)

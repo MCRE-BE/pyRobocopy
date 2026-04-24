@@ -1,26 +1,11 @@
 """Public API for the Robocopy synchronization tool."""
 
-__all__ = [
-    "robocopy",
-    "NothingToLoadError",
-    "RobocopyError",
-    "RobocopyConfig",
-    "RobocopyRunner",
-    "RobocopyResult",
-    "RobocopyStatistics",
-    "FileResult",
-    "CopyOptions",
-    "SelectionOptions",
-    "LoggingOptions",
-    "RobocopyStatus",
-    "StatRow",
-    "RobocopyParser",
-]
-
 # %%
 ####################
 # Import Statement #
 ####################
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -40,6 +25,23 @@ from .types import (
     RobocopyStatus,
     StatRow,
 )
+
+__all__ = [
+    "robocopy",
+    "NothingToLoadError",
+    "RobocopyError",
+    "RobocopyConfig",
+    "RobocopyRunner",
+    "RobocopyResult",
+    "RobocopyStatistics",
+    "FileResult",
+    "CopyOptions",
+    "SelectionOptions",
+    "LoggingOptions",
+    "RobocopyStatus",
+    "StatRow",
+    "RobocopyParser",
+]
 
 
 def robocopy(

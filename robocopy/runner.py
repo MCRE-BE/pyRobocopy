@@ -4,6 +4,8 @@
 ####################
 # Import Statement #
 ####################
+from __future__ import annotations
+
 import logging
 import subprocess
 
@@ -60,15 +62,18 @@ class RobocopyRunner:
             errors="replace",
             check=False,
         )
-        lines = proc.stdout.splitlines()
 
-        for line in reversed(lines):
-            if "Files :" in line:
-                parts = line.split()
-                try:
-                    return int(parts[2])
-                except (IndexError, ValueError):
-                    return 0
+        idx = proc.stdout.rfind("Files :")
+        if idx != -1:
+            end_idx = proc.stdout.find("\n", idx)
+            if end_idx == -1:
+                end_idx = len(proc.stdout)
+            line = proc.stdout[idx:end_idx]
+            parts = line.split()
+            try:
+                return int(parts[2])
+            except (IndexError, ValueError):
+                return 0
         return 0
 
     def run(
@@ -118,22 +123,27 @@ class RobocopyRunner:
                 desc=f"Sync {self.config.source.name}",
             )
 
-        with subprocess.Popen(  # noqa: S603
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            errors="replace",
-            bufsize=1,
-        ) as proc:
-            self._process_output_stream(
-                proc=proc,
-                parser=parser,
-                result=result,
-                pbar=pbar,
-            )
-            proc.wait()
-            result.exit_code = proc.returncode
+        try:
+            with subprocess.Popen(  # noqa: S603
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                errors="replace",
+                bufsize=1,
+            ) as proc:
+                self._process_output_stream(
+                    proc=proc,
+                    parser=parser,
+                    result=result,
+                    pbar=pbar,
+                )
+                proc.wait()
+                result.exit_code = proc.returncode
+        except Exception as e:
+            self.log.error("Robocopy run failed fatally.", exc_info=True)
+            result.errors.append(str(e))
+            result.exit_code = 16
 
         if pbar:
             pbar.close()
@@ -142,6 +152,45 @@ class RobocopyRunner:
             self.log.error(f"Robocopy failed with exit code {result.exit_code}")
 
         return result
+
+    def _process_line(
+        self,
+        line: str,
+        parser: RobocopyParser,
+        result: RobocopyResult,
+        pbar: tqdm | None,
+    ) -> None:
+        """Process a single line from the robocopy output stream.
+
+        Parameters
+        ----------
+        line : str
+            The line to process.
+        parser : RobocopyParser
+            The parser for extracting information.
+        result : RobocopyResult
+            The result object to populate.
+        pbar : tqdm, optional
+            The progress bar to update.
+        """
+        parsed = parser.parse_line(
+            line=line,
+        )
+        if isinstance(parsed, str):
+            if parsed.startswith("Error"):
+                result.errors.append(parsed)
+            elif parsed == "SUMMARY_START":
+                self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
+                return
+            elif parser.stats_found and ":" in parsed:
+                self._parse_stat_row(
+                    line=parsed,
+                    stats=result.stats,
+                )
+                self.log.info(f"[Robocopy] {parsed}")
+
+        if pbar and "100%" in line:
+            pbar.update(1)
 
     def _process_output_stream(
         self,
@@ -167,24 +216,12 @@ class RobocopyRunner:
             return
 
         for line in proc.stdout:
-            parsed = parser.parse_line(
+            self._process_line(
                 line=line,
+                parser=parser,
+                result=result,
+                pbar=pbar,
             )
-            if isinstance(parsed, str):
-                if parsed.startswith("Error"):
-                    result.errors.append(parsed)
-                elif parsed == "SUMMARY_START":
-                    self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
-                    continue
-                elif parser.stats_found and ":" in parsed:
-                    self._parse_stat_row(
-                        line=parsed,
-                        stats=result.stats,
-                    )
-                    self.log.info(f"[Robocopy] {parsed}")
-
-            if pbar and "100%" in line:
-                pbar.update(1)
 
     def _parse_stat_row(
         self,

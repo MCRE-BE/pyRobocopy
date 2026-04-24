@@ -119,10 +119,38 @@ def test_from_command_line():
     cmd = "robocopy C:/Src D:/Dst /S /E /MT:4 /XF *.bak temp.tmp /XD dir1 dir2"
     config = RobocopyConfig.from_command_line(cmd)
 
-    assert str(config.source) == "C:/Src"
-    assert str(config.destination) == "D:/Dst"
+    assert config.source == Path("C:/Src")
+    assert config.destination == Path("D:/Dst")
     assert config.copy.subdirs is True
     assert config.copy.empty_subdirs is True
     assert config.copy.multi_threaded == 4
     assert config.selection.exclude_files == ["*.bak", "temp.tmp"]
     assert config.selection.exclude_dirs == ["dir1", "dir2"]
+
+
+def test_from_command_line_mir():
+    cmd = "robocopy src dst /MIR"
+    config = RobocopyConfig.from_command_line(cmd)
+    assert config.copy.mirror is True
+    assert config.copy.empty_subdirs is True
+    assert config.copy.purge is True
+
+
+def test_from_command_line_exclusions():
+    cmd = "robocopy src dst /XF file1.txt *.tmp /XD dir1 dir2 /S"
+    config = RobocopyConfig.from_command_line(cmd)
+    assert "file1.txt" in config.selection.exclude_files
+    assert "*.tmp" in config.selection.exclude_files
+    assert "dir1" in config.selection.exclude_dirs
+    assert "dir2" in config.selection.exclude_dirs
+    assert config.copy.subdirs is True
+
+
+def test_from_command_line_errors():
+    import pytest
+
+    with pytest.raises(ValueError, match="Command string must start with 'robocopy'"):
+        RobocopyConfig.from_command_line("notrobocopy src dst")
+
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
+        RobocopyConfig.from_command_line("robocopy src")
