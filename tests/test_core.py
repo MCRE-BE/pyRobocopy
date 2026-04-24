@@ -167,3 +167,20 @@ def test_runner_discover_totals_no_files_line():
         mock_run.return_value = mock_proc
 
         assert runner.discover_totals() == 0
+
+
+def test_runner_discover_totals_value_error_edge_cases():
+    """Verify that discover_totals handles various value errors properly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    with patch("subprocess.run") as mock_run:
+        mock_proc = MagicMock()
+        # Ensure it handles floats, negatives with strange formatting, or non-ints
+        mock_proc.stdout = "Files : 10.5 20 30\n"
+        mock_run.return_value = mock_proc
+        assert runner.discover_totals() == 0
+
+        mock_proc.stdout = "Files : None 20 30\n"
+        mock_run.return_value = mock_proc
+        assert runner.discover_totals() == 0

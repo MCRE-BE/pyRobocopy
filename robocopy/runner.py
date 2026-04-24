@@ -4,6 +4,8 @@
 ####################
 # Import Statement #
 ####################
+from __future__ import annotations
+
 import logging
 import subprocess
 
@@ -60,15 +62,18 @@ class RobocopyRunner:
             errors="replace",
             check=False,
         )
-        lines = proc.stdout.splitlines()
 
-        for line in reversed(lines):
-            if "Files :" in line:
-                parts = line.split()
-                try:
-                    return int(parts[2])
-                except (IndexError, ValueError):
-                    return 0
+        idx = proc.stdout.rfind("Files :")
+        if idx != -1:
+            end_idx = proc.stdout.find("\n", idx)
+            if end_idx == -1:
+                end_idx = len(proc.stdout)
+            line = proc.stdout[idx:end_idx]
+            parts = line.split()
+            try:
+                return int(parts[2])
+            except (IndexError, ValueError):
+                return 0
         return 0
 
     def run(
@@ -121,7 +126,7 @@ class RobocopyRunner:
         with subprocess.Popen(  # noqa: S603
             args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             errors="replace",
             bufsize=1,
