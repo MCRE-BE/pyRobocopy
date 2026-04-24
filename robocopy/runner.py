@@ -145,6 +145,45 @@ class RobocopyRunner:
 
         return result
 
+    def _process_line(
+        self,
+        line: str,
+        parser: RobocopyParser,
+        result: RobocopyResult,
+        pbar: tqdm | None,
+    ) -> None:
+        """Process a single line from the robocopy output stream.
+
+        Parameters
+        ----------
+        line : str
+            The line to process.
+        parser : RobocopyParser
+            The parser for extracting information.
+        result : RobocopyResult
+            The result object to populate.
+        pbar : tqdm, optional
+            The progress bar to update.
+        """
+        parsed = parser.parse_line(
+            line=line,
+        )
+        if isinstance(parsed, str):
+            if parsed.startswith("Error"):
+                result.errors.append(parsed)
+            elif parsed == "SUMMARY_START":
+                self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
+                return
+            elif parser.stats_found and ":" in parsed:
+                self._parse_stat_row(
+                    line=parsed,
+                    stats=result.stats,
+                )
+                self.log.info(f"[Robocopy] {parsed}")
+
+        if pbar and "100%" in line:
+            pbar.update(1)
+
     def _process_output_stream(
         self,
         proc: subprocess.Popen,
@@ -169,24 +208,12 @@ class RobocopyRunner:
             return
 
         for line in proc.stdout:
-            parsed = parser.parse_line(
+            self._process_line(
                 line=line,
+                parser=parser,
+                result=result,
+                pbar=pbar,
             )
-            if isinstance(parsed, str):
-                if parsed.startswith("Error"):
-                    result.errors.append(parsed)
-                elif parsed == "SUMMARY_START":
-                    self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
-                    continue
-                elif parser.stats_found and ":" in parsed:
-                    self._parse_stat_row(
-                        line=parsed,
-                        stats=result.stats,
-                    )
-                    self.log.info(f"[Robocopy] {parsed}")
-
-            if pbar and "100%" in line:
-                pbar.update(1)
 
     def _parse_stat_row(
         self,
