@@ -168,6 +168,7 @@ def test_runner_discover_totals_no_files_line():
 
         assert runner.discover_totals() == 0
 
+
 def test_runner_discover_totals_value_error_edge_cases():
     """Verify that discover_totals handles various value errors properly."""
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
