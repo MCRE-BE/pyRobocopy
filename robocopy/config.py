@@ -241,12 +241,13 @@ class RobocopyConfig:
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
+        if len(tokens) < 3:
+            raise ValueError("Command string must include source and destination paths")
+
         # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
-        files = (
-            tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
-        )
+        files = tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
 
         config = cls(
             source=src,

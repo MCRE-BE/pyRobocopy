@@ -4,6 +4,8 @@
 ####################
 from pathlib import Path
 
+import pytest
+
 from robocopy.config import (
     CopyOptions,
     LoggingOptions,
@@ -113,3 +115,11 @@ def test_to_args_retry_options():
     args = config.to_args()
     assert "/R:10" in args
     assert "/W:5" in args
+
+
+def test_from_command_line_incomplete():
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
+        RobocopyConfig.from_command_line("robocopy")
+
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
+        RobocopyConfig.from_command_line("robocopy C:\\src")
