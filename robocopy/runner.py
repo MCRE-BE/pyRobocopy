@@ -121,7 +121,7 @@ class RobocopyRunner:
         with subprocess.Popen(  # noqa: S603
             args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             errors="replace",
             bufsize=1,
