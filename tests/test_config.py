@@ -113,3 +113,16 @@ def test_to_args_retry_options():
     args = config.to_args()
     assert "/R:10" in args
     assert "/W:5" in args
+
+
+def test_from_command_line():
+    cmd = "robocopy C:/Src D:/Dst /S /E /MT:4 /XF *.bak temp.tmp /XD dir1 dir2"
+    config = RobocopyConfig.from_command_line(cmd)
+
+    assert str(config.source) == "C:/Src"
+    assert str(config.destination) == "D:/Dst"
+    assert config.copy.subdirs is True
+    assert config.copy.empty_subdirs is True
+    assert config.copy.multi_threaded == 4
+    assert config.selection.exclude_files == ["*.bak", "temp.tmp"]
+    assert config.selection.exclude_dirs == ["dir1", "dir2"]
