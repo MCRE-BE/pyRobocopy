@@ -65,13 +65,13 @@ def test_validate_newline_in_exclude_dirs():
 
 
 def test_validate_slash_in_source():
-    config = RobocopyConfig(source=Path("/MIR"), destination=Path("dst"))
+    config = RobocopyConfig(source="/MIR", destination=Path("dst"))
     with pytest.raises(ValueError, match="source path cannot start with '/' to prevent argument injection"):
         config.to_args()
 
 
 def test_validate_slash_in_destination():
-    config = RobocopyConfig(source=Path("src"), destination=Path("/PURGE"))
+    config = RobocopyConfig(source=Path("src"), destination="/PURGE")
     with pytest.raises(ValueError, match="destination path cannot start with '/' to prevent argument injection"):
         config.to_args()
 

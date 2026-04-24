@@ -13,3 +13,4 @@ A high-performance, object-oriented Python wrapper for the Windows `robocopy` ut
 - **Command-Line Parsing**: Initialize full configuration objects directly from raw Robocopy command strings.
 - **Multithreading**: Full support for Robocopy's multi-thread (`/MT`) engine.
 - **Rich Results**: Programmatic access to outcome statistics and error mapping for Windows System Errors.
+- **Cross-Version Support**: Compatible with Python 3.10 through 3.14.
