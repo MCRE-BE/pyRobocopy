@@ -118,22 +118,27 @@ class RobocopyRunner:
                 desc=f"Sync {self.config.source.name}",
             )
 
-        with subprocess.Popen(  # noqa: S603
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            errors="replace",
-            bufsize=1,
-        ) as proc:
-            self._process_output_stream(
-                proc=proc,
-                parser=parser,
-                result=result,
-                pbar=pbar,
-            )
-            proc.wait()
-            result.exit_code = proc.returncode
+        try:
+            with subprocess.Popen(  # noqa: S603
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                errors="replace",
+                bufsize=1,
+            ) as proc:
+                self._process_output_stream(
+                    proc=proc,
+                    parser=parser,
+                    result=result,
+                    pbar=pbar,
+                )
+                proc.wait()
+                result.exit_code = proc.returncode
+        except Exception as e:
+            self.log.error("Robocopy run failed fatally.", exc_info=True)
+            result.errors.append(str(e))
+            result.exit_code = 16
 
         if pbar:
             pbar.close()
