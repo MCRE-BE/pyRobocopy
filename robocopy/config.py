@@ -260,73 +260,77 @@ class RobocopyConfig:
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
+        config, start_idx = cls._extract_base_args(tokens)
+        config._parse_flags(tokens[start_idx:])
+
+        return config
+
+    @classmethod
+    def _extract_base_args(cls, tokens: list[str]) -> tuple["RobocopyConfig", int]:
+        """Extract source, destination, and files parameters.
+
+        Returns the configured object and the index of the next token to parse.
+        """
         if len(tokens) < 3:
             raise ValueError("Command string must include source and destination paths")
 
-        # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
 
-        i = 3
-        files = "*.*"
-        if i < len(tokens) and not tokens[i].startswith("/"):
-            files = tokens[i]
-            i += 1
+        has_file_filter = len(tokens) > 3 and not tokens[3].startswith("/")
+        files = tokens[3] if has_file_filter else "*.*"
 
-        config = cls(
-            source=src,
-            destination=dst,
-            files=files,
-        )
+        config = cls(source=src, destination=dst, files=files)
+        return config, 4 if has_file_filter else 3
 
+    def _parse_flags(self, tokens: list[str]) -> None:
+        """Parse configuration flags from a list of tokens."""
+        i = 0
         while i < len(tokens):
             token = tokens[i]
             t = token.upper()
 
             if t in _BOOLEAN_FLAGS:
-                path = _BOOLEAN_FLAGS[t]
-
-                if len(path) == 2 and path[1]:
-
-                    setattr(getattr(config, path[0]), path[1], True)
-                else:
-                    setattr(config, path[0], True)
+                self._apply_boolean_flag(t)
             elif t == "/MIR":
-                config.copy.mirror = True
-                config.copy.empty_subdirs = True
-                config.copy.purge = True
-            elif t == "/XF":
-                while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
-                    i += 1
-                    config.selection.exclude_files.append(tokens[i])
-            elif t == "/XD":
-                while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
-                    i += 1
-                    config.selection.exclude_dirs.append(tokens[i])
-
-            elif ":" in t:
-                prefix = t.split(":", 1)[0] + ":"
-                if prefix in _PREFIX_FLAGS:
-                    path, type_func = _PREFIX_FLAGS[prefix]
-                    val = type_func(t.split(":", 1)[1])
-                    if len(path) == 2 and path[1]:
-                        setattr(getattr(config, path[0]), path[1], val)
-                    else:
-                        setattr(config, path[0], val)
-
+                self.copy.mirror = True
+                self.copy.empty_subdirs = True
+                self.copy.purge = True
+            elif t in ("/XF", "/XD"):
+                i = self._parse_exclusion_list(t, tokens, i)
             else:
-                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
-                    if t.startswith(prefix):
-                        val = type_func(t.split(":", 1)[1])
-                        if path[1]:
-                            setattr(getattr(config, path[0]), path[1], val)
-                        else:
-                            setattr(config, path[0], val)
-                        break
-
+                self._apply_prefix_flag(t)
             i += 1
 
-        return config
+    def _apply_boolean_flag(self, flag: str) -> None:
+        """Apply a simple boolean flag to the configuration."""
+        path = _BOOLEAN_FLAGS[flag]
+        if path[1]:
+            setattr(getattr(self, path[0]), path[1], True)
+        else:
+            setattr(self, path[0], True)
+
+    def _parse_exclusion_list(self, flag: str, tokens: list[str], start_idx: int) -> int:
+        """Parse an exclusion list (/XF or /XD) until the next flag."""
+        target_list = (
+            self.selection.exclude_files if flag == "/XF" else self.selection.exclude_dirs
+        )
+        i = start_idx
+        while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
+            i += 1
+            target_list.append(tokens[i])
+        return i
+
+    def _apply_prefix_flag(self, flag: str) -> None:
+        """Apply a prefix flag (like /MT:8) to the configuration."""
+        for prefix, (path, type_func) in _PREFIX_FLAGS.items():
+            if flag.startswith(prefix):
+                val = type_func(flag.split(":", 1)[1])
+                if path[1]:
+                    setattr(getattr(self, path[0]), path[1], val)
+                else:
+                    setattr(self, path[0], val)
+                break
 
     def to_args(self: Self) -> list[str]:
         """Convert this configuration into a list of robocopy arguments.
