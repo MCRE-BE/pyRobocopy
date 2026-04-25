@@ -207,11 +207,19 @@ class RobocopyConfig:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
                 )
+            if path_str.strip().startswith("/"):
+                raise ValueError(
+                    f"{attr} path cannot start with '/' to prevent argument injection",
+                )
 
         # Validate file filter
         if "\0" in self.files or "\n" in self.files or "\r" in self.files:
             raise ValueError(
                 "File filter contains invalid characters",
+            )
+        if self.files.strip().startswith("/"):
+            raise ValueError(
+                "File filter cannot start with '/' to prevent argument injection",
             )
 
         # Validate exclusions
@@ -223,6 +231,10 @@ class RobocopyConfig:
                 if "\0" in item or "\n" in item or "\r" in item:
                     raise ValueError(
                         f"{attr} item '{item}' contains invalid characters",
+                    )
+                if item.strip().startswith("/"):
+                    raise ValueError(
+                        f"{attr} item '{item}' cannot start with '/' to prevent argument injection",
                     )
 
     @classmethod
