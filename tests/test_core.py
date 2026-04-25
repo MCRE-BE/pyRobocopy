@@ -14,7 +14,9 @@ from robocopy import (
 )
 
 
+# ==================== #
 # Functional API Tests #
+# ==================== #
 def test_robocopy_src_not_exists():
     """Verify robocopy fails if source is missing."""
     with (
@@ -60,7 +62,9 @@ def test_robocopy_no_files_found():
             robocopy("src", "dst")
 
 
+# ==================== #
 # Runner Class Tests   #
+# ==================== #
 def test_runner_run_source_not_exists():
     """Verify that runner.run() raises NothingToLoadError if source does not exist."""
     config = RobocopyConfig(source=Path("non_existent_src"), destination=Path("dst"))
