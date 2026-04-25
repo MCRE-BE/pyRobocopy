@@ -4,17 +4,10 @@
 ####################
 # Import Statement #
 ####################
-from __future__ import annotations
-
 import shlex
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+from typing import Self
 
 ####################
 # Global Variables #
@@ -207,19 +200,11 @@ class RobocopyConfig:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
                 )
-            if path_str.strip().startswith("/"):
-                raise ValueError(
-                    f"{attr} path cannot start with '/' to prevent argument injection",
-                )
 
         # Validate file filter
         if "\0" in self.files or "\n" in self.files or "\r" in self.files:
             raise ValueError(
                 "File filter contains invalid characters",
-            )
-        if self.files.strip().startswith("/"):
-            raise ValueError(
-                "File filter cannot start with '/' to prevent argument injection",
             )
 
         # Validate exclusions
@@ -231,10 +216,6 @@ class RobocopyConfig:
                 if "\0" in item or "\n" in item or "\r" in item:
                     raise ValueError(
                         f"{attr} item '{item}' contains invalid characters",
-                    )
-                if item.strip().startswith("/"):
-                    raise ValueError(
-                        f"{attr} item '{item}' cannot start with '/' to prevent argument injection",
                     )
 
     @classmethod
@@ -260,77 +241,53 @@ class RobocopyConfig:
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
-        config, start_idx = cls._extract_base_args(tokens)
-        config._parse_flags(tokens[start_idx:])
-
-        return config
-
-    @classmethod
-    def _extract_base_args(cls, tokens: list[str]) -> tuple["RobocopyConfig", int]:
-        """Extract source, destination, and files parameters.
-
-        Returns the configured object and the index of the next token to parse.
-        """
-        if len(tokens) < 3:
-            raise ValueError("Command string must include source and destination paths")
-
+        # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
+        files = (
+            tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
+        )
 
-        has_file_filter = len(tokens) > 3 and not tokens[3].startswith("/")
-        files = tokens[3] if has_file_filter else "*.*"
+        config = cls(
+            source=src,
+            destination=dst,
+            files=files,
+        )
 
-        config = cls(source=src, destination=dst, files=files)
-        return config, 4 if has_file_filter else 3
-
-    def _parse_flags(self, tokens: list[str]) -> None:
-        """Parse configuration flags from a list of tokens."""
-        i = 0
+        i = 4
         while i < len(tokens):
             token = tokens[i]
             t = token.upper()
 
             if t in _BOOLEAN_FLAGS:
-                self._apply_boolean_flag(t)
-            elif t == "/MIR":
-                self.copy.mirror = True
-                self.copy.empty_subdirs = True
-                self.copy.purge = True
-            elif t in ("/XF", "/XD"):
-                i = self._parse_exclusion_list(t, tokens, i)
-            else:
-                self._apply_prefix_flag(t)
-            i += 1
-
-    def _apply_boolean_flag(self, flag: str) -> None:
-        """Apply a simple boolean flag to the configuration."""
-        path = _BOOLEAN_FLAGS[flag]
-        if path[1]:
-            setattr(getattr(self, path[0]), path[1], True)
-        else:
-            setattr(self, path[0], True)
-
-    def _parse_exclusion_list(self, flag: str, tokens: list[str], start_idx: int) -> int:
-        """Parse an exclusion list (/XF or /XD) until the next flag."""
-        target_list = (
-            self.selection.exclude_files if flag == "/XF" else self.selection.exclude_dirs
-        )
-        i = start_idx
-        while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
-            i += 1
-            target_list.append(tokens[i])
-        return i
-
-    def _apply_prefix_flag(self, flag: str) -> None:
-        """Apply a prefix flag (like /MT:8) to the configuration."""
-        for prefix, (path, type_func) in _PREFIX_FLAGS.items():
-            if flag.startswith(prefix):
-                val = type_func(flag.split(":", 1)[1])
-                if path[1]:
-                    setattr(getattr(self, path[0]), path[1], val)
+                path = _BOOLEAN_FLAGS[t]
+                if len(path) == 2:
+                    setattr(getattr(config, path[0]), path[1], True)
                 else:
-                    setattr(self, path[0], val)
-                break
+                    setattr(config, path[0], True)
+            elif t == "/MIR":
+                config.copy.mirror = True
+                config.copy.empty_subdirs = True
+                config.copy.purge = True
+            elif t == "/XF":
+                while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
+                    i += 1
+                while i + 1 < len(tokens) and not tokens[i + 1].startswith("/"):
+                    i += 1
+                    config.selection.exclude_dirs.append(tokens[i])
+            else:
+                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
+                    if t.startswith(prefix):
+                        val = type_func(t.split(":", 1)[1])
+                        if len(path) == 2:
+                            setattr(getattr(config, path[0]), path[1], val)
+                        else:
+                            setattr(config, path[0], val)
+                        break
+
+            i += 1
+
+        return config
 
     def to_args(self: Self) -> list[str]:
         """Convert this configuration into a list of robocopy arguments.

@@ -4,16 +4,13 @@
 ####################
 # Import Statement #
 ####################
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datetime import datetime
-    from pathlib import Path
-
     from .config import RobocopyConfig
 
 
@@ -146,7 +143,7 @@ class RobocopyResult:
         List of raw ERROR lines found in the output.
     """
 
-    config: RobocopyConfig
+    config: "RobocopyConfig"  # Forward reference
     exit_code: int
     stats: RobocopyStatistics = field(default_factory=RobocopyStatistics)
     files: list[FileResult] = field(default_factory=list)

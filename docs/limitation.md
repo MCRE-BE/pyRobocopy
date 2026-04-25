@@ -14,6 +14,5 @@ The **Smart Progress** feature involves a pre-scan (`/L`) of the source and dest
 ### Recommendation
 For massive directory trees on network shares where a progress bar is not strictly required, use `smart_progress=False` for instant execution.
 
-## Compatibility
-- **OS**: Windows (Required for the underlying `robocopy.exe`).
-- **Python**: 3.10, 3.11, 3.12, 3.13, or 3.14.
+## Windows Only
+As this library is a wrapper around the Windows `robocopy` utility, it is only compatible with Windows environments.

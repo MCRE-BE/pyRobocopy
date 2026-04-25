@@ -25,9 +25,6 @@ robocopy(
 For complex synchronization tasks, use the `RobocopyRunner` and `RobocopyConfig` classes.
 
 ### 1. Configure via Dataclasses
-There are two ways to configure a run: by setting attributes after initialization, or by passing sub-configuration objects directly to the constructor.
-
-#### Option A: Incremental Configuration
 ```python
 from robocopy import RobocopyConfig, RobocopyRunner
 
@@ -39,34 +36,6 @@ config.selection.exclude_files = ["*.tmp", "log.txt"]
 
 runner = RobocopyRunner(config)
 result = runner.run(smart_progress=True)
-```
-
-#### Option B: Full Initialization (Recommended for clean code)
-```python
-from pathlib import Path
-from robocopy import (
-    RobocopyConfig,
-    RobocopyRunner,
-    CopyOptions,
-    SelectionOptions
-)
-
-config = RobocopyConfig(
-    source=Path("C:/data"),
-    destination=Path("D:/backup"),
-    copy=CopyOptions(
-        mirror=True,
-        multi_threaded=16
-    ),
-    selection=SelectionOptions(
-        exclude_older=True,
-        exclude_files=["*.tmp", "log.txt"]
-    )
-)
-
-runner = RobocopyRunner(config)
-result = runner.run(smart_progress=True)
-```
 
 if result.success:
     print(f"Copied {result.stats.files.copied} files.")

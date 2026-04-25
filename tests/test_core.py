@@ -167,37 +167,3 @@ def test_runner_discover_totals_no_files_line():
         mock_run.return_value = mock_proc
 
         assert runner.discover_totals() == 0
-
-
-def test_runner_run_exception_handling():
-    """Verify that exceptions during subprocess execution are caught and handled."""
-    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
-    runner = RobocopyRunner(config=config)
-
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("subprocess.Popen", side_effect=OSError("Permission denied")),
-        patch.object(runner.log, "error") as mock_log_error,
-    ):
-        result = runner.run()
-
-        assert result.exit_code == 16
-        assert "Permission denied" in result.errors
-        mock_log_error.assert_any_call("Robocopy run failed fatally.", exc_info=True)
-
-
-def test_runner_discover_totals_value_error_edge_cases():
-    """Verify that discover_totals handles various value errors properly."""
-    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
-    runner = RobocopyRunner(config=config)
-
-    with patch("subprocess.run") as mock_run:
-        mock_proc = MagicMock()
-        # Ensure it handles floats, negatives with strange formatting, or non-ints
-        mock_proc.stdout = "Files : 10.5 20 30\n"
-        mock_run.return_value = mock_proc
-        assert runner.discover_totals() == 0
-
-        mock_proc.stdout = "Files : None 20 30\n"
-        mock_run.return_value = mock_proc
-        assert runner.discover_totals() == 0

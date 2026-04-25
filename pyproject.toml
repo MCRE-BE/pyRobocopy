@@ -7,23 +7,16 @@ requires = [ "hatchling" ]
 ## #######
 [project]
 name = "pyrobocopy"
-version = "1.0.3"
+version = "1.0.2"
 description = "thin python API for Window's robocopy utility"
 readme = "README.md"
-license-files = [ "LICENSE" ]
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = [
-  "tqdm>=4.64",
-  "typing-extensions>=4; python_version<'3.11'",
-]
+dependencies = [ "tqdm>=4.64" ]
 optional-dependencies.dev = [
   "prek>0",
   "pytest>=9.0.3",
@@ -49,18 +42,3 @@ dev = [
 ## #####
 [tool.hatch]
 build.targets.wheel.packages = [ "robocopy" ]
-
-[tool.ty]
-environment.root = [ "." ]
-environment.python = "./.venv"
-# Globally downgrade noisy rules to warnings to focus on hard errors
-rules.invalid-argument-type = "warn"
-rules.possibly-unresolved-reference = "warn"
-rules.unresolved-import = "error"
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-tag_format = "v${version}"
-version_scheme = "pep440"
-version_provider = "uv"
-update_changelog_on_bump = true
