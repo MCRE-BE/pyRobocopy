@@ -4,8 +4,6 @@
 ####################
 # Import Statement #
 ####################
-from __future__ import annotations
-
 import logging
 import subprocess
 
@@ -62,18 +60,15 @@ class RobocopyRunner:
             errors="replace",
             check=False,
         )
+        lines = proc.stdout.splitlines()
 
-        idx = proc.stdout.rfind("Files :")
-        if idx != -1:
-            end_idx = proc.stdout.find("\n", idx)
-            if end_idx == -1:
-                end_idx = len(proc.stdout)
-            line = proc.stdout[idx:end_idx]
-            parts = line.split()
-            try:
-                return int(parts[2])
-            except (IndexError, ValueError):
-                return 0
+        for line in reversed(lines):
+            if "Files :" in line:
+                parts = line.split()
+                try:
+                    return int(parts[2])
+                except (IndexError, ValueError):
+                    return 0
         return 0
 
     def run(
@@ -97,54 +92,20 @@ class RobocopyRunner:
         NothingToLoadError
             If source directory does not exist.
         """
-        if not self.config.source.exists():
-            raise NothingToLoadError(f"Source {self.config.source} does not exist.")
+        # 1. Validation
+        self._validate_source()
 
-        total_files = 0
-        if smart_progress:
-            self.log.info("Calibrating progress bar (discovery phase)...")
-            total_files = self.discover_totals()
-            self.log.info(f"Discovered {total_files} files to process.")
-
+        # 2. Preparation
+        total_files = self._get_total_files(smart_progress)
         args = self.config.to_args()
-        parser = RobocopyParser(
-            config=self.config,
-        )
-        result = RobocopyResult(
-            config=self.config,
-            exit_code=0,
-        )
+        parser = RobocopyParser(config=self.config)
+        result = RobocopyResult(config=self.config, exit_code=0)
+        pbar = self._init_progress_bar(smart_progress, total_files)
 
-        pbar = None
-        if smart_progress:
-            pbar = tqdm(
-                total=total_files,
-                unit="file",
-                desc=f"Sync {self.config.source.name}",
-            )
+        # 3. Execution
+        self._execute_robocopy(args, parser, result, pbar)
 
-        try:
-            with subprocess.Popen(  # noqa: S603
-                args,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                errors="replace",
-                bufsize=1,
-            ) as proc:
-                self._process_output_stream(
-                    proc=proc,
-                    parser=parser,
-                    result=result,
-                    pbar=pbar,
-                )
-                proc.wait()
-                result.exit_code = proc.returncode
-        except Exception as e:
-            self.log.error("Robocopy run failed fatally.", exc_info=True)
-            result.errors.append(str(e))
-            result.exit_code = 16
-
+        # 4. Cleanup
         if pbar:
             pbar.close()
 
@@ -153,44 +114,96 @@ class RobocopyRunner:
 
         return result
 
-    def _process_line(
+    def _validate_source(self) -> None:
+        """Validate that the source directory exists.
+
+        Raises
+        ------
+        NothingToLoadError
+            If source directory does not exist.
+        """
+        if not self.config.source.exists():
+            raise NothingToLoadError(f"Source {self.config.source} does not exist.")
+
+    def _get_total_files(self, smart_progress: bool) -> int:
+        """Get total files for progress tracking if enabled.
+
+        Parameters
+        ----------
+        smart_progress : bool
+            Whether smart progress is enabled.
+
+        Returns
+        -------
+        int
+            Total file count.
+        """
+        if smart_progress:
+            self.log.info("Calibrating progress bar (discovery phase)...")
+            total_files = self.discover_totals()
+            self.log.info(f"Discovered {total_files} files to process.")
+            return total_files
+        return 0
+
+    def _init_progress_bar(self, smart_progress: bool, total_files: int) -> tqdm | None:
+        """Initialize progress bar if smart progress is enabled.
+
+        Parameters
+        ----------
+        smart_progress : bool
+            Whether smart progress is enabled.
+        total_files : int
+            Total number of files.
+
+        Returns
+        -------
+        tqdm | None
+            Progress bar instance or None.
+        """
+        if smart_progress:
+            return tqdm(
+                total=total_files,
+                unit="file",
+                desc=f"Sync {self.config.source.name}",
+            )
+        return None
+
+    def _execute_robocopy(
         self,
-        line: str,
+        args: list[str],
         parser: RobocopyParser,
         result: RobocopyResult,
         pbar: tqdm | None,
     ) -> None:
-        """Process a single line from the robocopy output stream.
+        """Execute the robocopy subprocess and process its output.
 
         Parameters
         ----------
-        line : str
-            The line to process.
+        args : list[str]
+            Command line arguments.
         parser : RobocopyParser
-            The parser for extracting information.
+            The parser for extracting information from lines.
         result : RobocopyResult
             The result object to populate.
-        pbar : tqdm, optional
+        pbar : tqdm | None
             The progress bar to update.
         """
-        parsed = parser.parse_line(
-            line=line,
-        )
-        if isinstance(parsed, str):
-            if parsed.startswith("Error"):
-                result.errors.append(parsed)
-            elif parsed == "SUMMARY_START":
-                self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
-                return
-            elif parser.stats_found and ":" in parsed:
-                self._parse_stat_row(
-                    line=parsed,
-                    stats=result.stats,
-                )
-                self.log.info(f"[Robocopy] {parsed}")
-
-        if pbar and "100%" in line:
-            pbar.update(1)
+        with subprocess.Popen(  # noqa: S603
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            errors="replace",
+            bufsize=1,
+        ) as proc:
+            self._process_output_stream(
+                proc=proc,
+                parser=parser,
+                result=result,
+                pbar=pbar,
+            )
+            proc.wait()
+            result.exit_code = proc.returncode
 
     def _process_output_stream(
         self,
@@ -216,12 +229,24 @@ class RobocopyRunner:
             return
 
         for line in proc.stdout:
-            self._process_line(
+            parsed = parser.parse_line(
                 line=line,
-                parser=parser,
-                result=result,
-                pbar=pbar,
             )
+            if isinstance(parsed, str):
+                if parsed.startswith("Error"):
+                    result.errors.append(parsed)
+                elif parsed == "SUMMARY_START":
+                    self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
+                    continue
+                elif parser.stats_found and ":" in parsed:
+                    self._parse_stat_row(
+                        line=parsed,
+                        stats=result.stats,
+                    )
+                    self.log.info(f"[Robocopy] {parsed}")
+
+            if pbar and "100%" in line:
+                pbar.update(1)
 
     def _parse_stat_row(
         self,

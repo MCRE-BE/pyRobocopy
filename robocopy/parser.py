@@ -4,8 +4,6 @@
 ####################
 # Import Statement #
 ####################
-from __future__ import annotations
-
 import re
 
 from .config import RobocopyConfig
@@ -36,11 +34,10 @@ class RobocopyParser:
         The configuration context for parsing variables.
     """
 
-    _error_re = re.compile(r"ERROR (\d+) \(0x[0-9A-Fa-f]+\)")
-
     def __init__(self, config: RobocopyConfig):
         self.config = config
         self.stats_found = False
+        self.error_re = re.compile(r"ERROR (\d+) \(0x[0-9A-Fa-f]+\)")
 
     def parse_line(self, line: str) -> FileResult | str | None:
         """Analyze a single line and extract meaning.
@@ -60,7 +57,7 @@ class RobocopyParser:
             return None
 
         # Check for error codes
-        if "ERROR" in line and (match := self._error_re.search(line)):
+        if "ERROR" in line and (match := self.error_re.search(line)):
             err_code = match.group(1)
             category = WINDOWS_ERROR_CODES.get(
                 err_code,

@@ -1,25 +1,17 @@
-name: PR
+name: CI
 
 on:
   push:
-    branches:
-      - master
-      - main
-      - develop
+    branches: [ master ]
   pull_request:
-    branches:
-      - master
-      - main
-      - develop
-  workflow_dispatch:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.13"
@@ -35,11 +27,11 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
+        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
       - name: Set up Python ${{ matrix.python-version }}
