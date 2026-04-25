@@ -1,3 +1,5 @@
+"""Command-line interface entrypoints and parsing backends for pyrobocopy."""
+
 import argparse
 import sys
 from pathlib import Path
@@ -8,6 +10,7 @@ from .runner import RobocopyRunner
 
 
 def print_help() -> None:
+    """Print the general help menu for the pyrobocopy CLI."""
     print("Usage: pyrobocopy [OPTIONS] source destination [files] [robocopy_flags]")  # noqa: T201
     print()  # noqa: T201
     print("Alternative backends:")  # noqa: T201
@@ -21,6 +24,22 @@ def print_help() -> None:
 
 
 def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
+    """Parse command line arguments using a Python argparse backend.
+
+    Maps explicitly defined GNU-style long flags and Robocopy-style short flags
+    to a `RobocopyConfig` instance.
+
+    Parameters
+    ----------
+    args : list[str]
+        A list of command-line argument strings, excluding the program name.
+
+    Returns
+    -------
+    tuple[RobocopyConfig, bool]
+        A tuple containing the initialized `RobocopyConfig` and a boolean
+        indicating whether the smart progress feature should be enabled.
+    """
     parser = argparse.ArgumentParser(
         prog="pyrobocopy --backend=python",
         description="Python argparse backend for pyrobocopy",
@@ -128,6 +147,11 @@ def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
 
 
 def main() -> None:  # noqa: C901, PLR0912
+    """Main entrypoint for the `pyrobocopy` CLI tool.
+
+    Extracts the global `--backend` argument and routes the remaining
+    arguments to the appropriate parsing logic before executing the runner.
+    """
     args = sys.argv[1:]
 
     if not args or args[0] in ("help", "--help", "-h"):
