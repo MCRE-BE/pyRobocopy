@@ -31,83 +31,43 @@ def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
     parser.add_argument("destination", type=Path, help="Destination directory")
 
     # Optional positional
-    parser.add_argument(
-        "files", nargs="*", default=["*.*"], help="File filter (default: *.*)"
-    )
+    parser.add_argument("files", nargs="*", default=["*.*"], help="File filter (default: *.*)")
 
     # Copy options
     copy_group = parser.add_argument_group("Copy Options")
     copy_group.add_argument("--subdirs", action="store_true", help="Copy subdirectories")
-    copy_group.add_argument(
-        "--empty-subdirs", action="store_true", help="Copy empty subdirectories"
-    )
-    copy_group.add_argument(
-        "--restartable", action="store_true", help="Restartable mode"
-    )
+    copy_group.add_argument("--empty-subdirs", action="store_true", help="Copy empty subdirectories")
+    copy_group.add_argument("--restartable", action="store_true", help="Restartable mode")
     copy_group.add_argument("--backup-mode", action="store_true", help="Backup mode")
-    copy_group.add_argument(
-        "--multi-threaded", type=int, default=8, help="Multithreading count"
-    )
-    copy_group.add_argument(
-        "--fat-file-times", action="store_true", default=True, help="FAT file times"
-    )
-    copy_group.add_argument(
-        "--no-fat-file-times", action="store_false", dest="fat_file_times"
-    )
-    copy_group.add_argument(
-        "--copy-flags", type=str, default="DAT", help="Copy flags (default: DAT)"
-    )
-    copy_group.add_argument(
-        "--dir-copy-flags", type=str, default="DA", help="Dir copy flags (default: DA)"
-    )
-    copy_group.add_argument(
-        "--purge", action="store_true", help="Purge destination files"
-    )
+    copy_group.add_argument("--multi-threaded", type=int, default=8, help="Multithreading count")
+    copy_group.add_argument("--fat-file-times", action="store_true", default=True, help="FAT file times")
+    copy_group.add_argument("--no-fat-file-times", action="store_false", dest="fat_file_times")
+    copy_group.add_argument("--copy-flags", type=str, default="DAT", help="Copy flags (default: DAT)")
+    copy_group.add_argument("--dir-copy-flags", type=str, default="DA", help="Dir copy flags (default: DA)")
+    copy_group.add_argument("--purge", action="store_true", help="Purge destination files")
     copy_group.add_argument("--mirror", action="store_true", help="Mirror mode")
 
     # Selection options
     sel_group = parser.add_argument_group("Selection Options")
-    sel_group.add_argument(
-        "--exclude-older", action="store_true", default=True, help="Exclude older files"
-    )
-    sel_group.add_argument(
-        "--no-exclude-older", action="store_false", dest="exclude_older"
-    )
-    sel_group.add_argument(
-        "--exclude-extra", action="store_true", help="Exclude extra files"
-    )
-    sel_group.add_argument(
-        "--exclude-files", nargs="*", default=[], help="Exclude files"
-    )
+    sel_group.add_argument("--exclude-older", action="store_true", default=True, help="Exclude older files")
+    sel_group.add_argument("--no-exclude-older", action="store_false", dest="exclude_older")
+    sel_group.add_argument("--exclude-extra", action="store_true", help="Exclude extra files")
+    sel_group.add_argument("--exclude-files", nargs="*", default=[], help="Exclude files")
     sel_group.add_argument("--exclude-dirs", nargs="*", default=[], help="Exclude dirs")
-    sel_group.add_argument(
-        "--include-archive-only", action="store_true", help="Include archive only"
-    )
-    sel_group.add_argument(
-        "--reset-archive", action="store_true", help="Reset archive attribute"
-    )
+    sel_group.add_argument("--include-archive-only", action="store_true", help="Include archive only")
+    sel_group.add_argument("--reset-archive", action="store_true", help="Reset archive attribute")
 
     # Logging options
     log_group = parser.add_argument_group("Logging Options")
     log_group.add_argument("--verbose", action="store_true", help="Verbose logging")
     log_group.add_argument("--no-file-list", action="store_true", help="No file list")
-    log_group.add_argument(
-        "--no-dir-list", action="store_true", default=True, help="No dir list"
-    )
+    log_group.add_argument("--no-dir-list", action="store_true", default=True, help="No dir list")
     log_group.add_argument("--list-dirs", action="store_false", dest="no_dir_list")
-    log_group.add_argument(
-        "--show-timestamps", action="store_true", help="Show timestamps"
-    )
+    log_group.add_argument("--show-timestamps", action="store_true", help="Show timestamps")
     log_group.add_argument("--full-pathnames", action="store_true", help="Full pathnames")
-    log_group.add_argument(
-        "--bytes-as-integers", action="store_true", default=True, help="Bytes as integers"
-    )
-    log_group.add_argument(
-        "--no-job-header", action="store_true", help="No job header"
-    )
-    log_group.add_argument(
-        "--no-job-summary", action="store_true", help="No job summary"
-    )
+    log_group.add_argument("--bytes-as-integers", action="store_true", default=True, help="Bytes as integers")
+    log_group.add_argument("--no-job-header", action="store_true", help="No job header")
+    log_group.add_argument("--no-job-summary", action="store_true", help="No job summary")
     log_group.add_argument("--tee", action="store_true", help="Tee output")
 
     # Retries
@@ -115,9 +75,7 @@ def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
     parser.add_argument("--retry-wait", type=int, default=3, help="Retry wait")
 
     # Runner args
-    parser.add_argument(
-        "--smart-progress", action="store_true", help="Use smart progress"
-    )
+    parser.add_argument("--smart-progress", action="store_true", help="Use smart progress")
 
     parsed_args = parser.parse_args(args)
 
