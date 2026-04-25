@@ -302,6 +302,15 @@ class RobocopyConfig:
                     else:
                         setattr(config, path[0], val)
 
+            else:
+                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
+                    if t.startswith(prefix):
+                        val = type_func(t.split(":", 1)[1])
+                        if path[1]:
+                            setattr(getattr(config, path[0]), path[1], val)
+                        else:
+                            setattr(config, path[0], val)
+                        break
 
             i += 1
 

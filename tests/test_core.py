@@ -169,7 +169,6 @@ def test_runner_discover_totals_no_files_line():
         assert runner.discover_totals() == 0
 
 
-
 def test_runner_run_exception_handling():
     """Verify that exceptions during subprocess execution are caught and handled."""
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
@@ -185,6 +184,7 @@ def test_runner_run_exception_handling():
         assert result.exit_code == 16
         assert "Permission denied" in result.errors
         mock_log_error.assert_any_call("Robocopy run failed fatally.", exc_info=True)
+
 
 def test_runner_discover_totals_value_error_edge_cases():
     """Verify that discover_totals handles various value errors properly."""
