@@ -175,5 +175,5 @@ def test_from_command_line_errors():
     with pytest.raises(ValueError, match="Command string must start with 'robocopy'"):
         RobocopyConfig.from_command_line("notrobocopy src dst")
 
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
         RobocopyConfig.from_command_line("robocopy src")
