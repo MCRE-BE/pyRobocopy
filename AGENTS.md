@@ -22,7 +22,7 @@
 
 ## PR instructions
 - Use **Conventional Commits** in commits and PR's. This means to format them as <type>[optional scope]: <description>
-- Always run `prek run --all-files` and `uv run pytest tests/` before committing. 
+- Always run `prek run --all-files` and `uv run pytest tests/` before committing.
 
 ## Engineering Standards
 - **Python Style**:

@@ -45,9 +45,9 @@ result = runner.run(smart_progress=True)
 ```python
 from pathlib import Path
 from robocopy import (
-    RobocopyConfig, 
-    RobocopyRunner, 
-    CopyOptions, 
+    RobocopyConfig,
+    RobocopyRunner,
+    CopyOptions,
     SelectionOptions
 )
 
@@ -55,11 +55,11 @@ config = RobocopyConfig(
     source=Path("C:/data"),
     destination=Path("D:/backup"),
     copy=CopyOptions(
-        mirror=True, 
+        mirror=True,
         multi_threaded=16
     ),
     selection=SelectionOptions(
-        exclude_older=True, 
+        exclude_older=True,
         exclude_files=["*.tmp", "log.txt"]
     )
 )

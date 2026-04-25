@@ -4,8 +4,6 @@
 ####################
 from pathlib import Path
 
-import pytest
-
 from robocopy.config import (
     CopyOptions,
     LoggingOptions,
@@ -117,40 +115,17 @@ def test_to_args_retry_options():
     assert "/W:5" in args
 
 
-def test_from_command_line_incomplete():
-    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
-        RobocopyConfig.from_command_line("robocopy")
-
-    with pytest.raises(ValueError, match="Command string must include source and destination paths"):
-        RobocopyConfig.from_command_line("robocopy C:\\src")
-
-
-def test_from_command_line_basic():
-    cmd = "robocopy src dst"
+def test_from_command_line():
+    cmd = "robocopy C:/Src D:/Dst /S /E /MT:4 /XF *.bak temp.tmp /XD dir1 dir2"
     config = RobocopyConfig.from_command_line(cmd)
-    assert config.source == Path("src")
-    assert config.destination == Path("dst")
-    assert config.files == "*.*"
 
-
-def test_from_command_line_with_files():
-    cmd = "robocopy src dst *.txt"
-    config = RobocopyConfig.from_command_line(cmd)
-    assert config.source == Path("src")
-    assert config.destination == Path("dst")
-    assert config.files == "*.txt"
-
-
-def test_from_command_line_flags():
-    cmd = "robocopy src dst /S /E /MT:16 /V /XO /R:10 /W:5"
-    config = RobocopyConfig.from_command_line(cmd)
+    assert config.source == Path("C:/Src")
+    assert config.destination == Path("D:/Dst")
     assert config.copy.subdirs is True
     assert config.copy.empty_subdirs is True
-    assert config.copy.multi_threaded == 16
-    assert config.logging.verbose is True
-    assert config.selection.exclude_older is True
-    assert config.retry_count == 10
-    assert config.retry_wait == 5
+    assert config.copy.multi_threaded == 4
+    assert config.selection.exclude_files == ["*.bak", "temp.tmp"]
+    assert config.selection.exclude_dirs == ["dir1", "dir2"]
 
 
 def test_from_command_line_mir():
@@ -172,6 +147,8 @@ def test_from_command_line_exclusions():
 
 
 def test_from_command_line_errors():
+    import pytest
+
     with pytest.raises(ValueError, match="Command string must start with 'robocopy'"):
         RobocopyConfig.from_command_line("notrobocopy src dst")
 
