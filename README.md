@@ -66,6 +66,26 @@ runner = RobocopyRunner(config)
 result = runner.run()
 ```
 
+
+## Command-Line Interface (CLI)
+
+`pyrobocopy` comes with a command-line interface, exposed as both `pyrobocopy` and `robocopy` commands.
+
+It supports multiple parsing backends using the `--backend` flag:
+
+- **`windows` (Default)**: Passes arguments identically to the native Robocopy utility.
+  ```bash
+  pyrobocopy C:\Data D:\Backup /S /E /MT:32 /XO
+  ```
+- **`python`**: Uses a pure Python argparse interface with explicit flags (and short aliases mapped to the Windows flags).
+  ```bash
+  pyrobocopy --backend=python C:\Data D:\Backup --subdirs --multi-threaded 32 --exclude-older
+  # Or using shorthands:
+  pyrobocopy --backend=python C:\Data D:\Backup -s -mt 32 -xo
+  ```
+
+Run `pyrobocopy help` or `pyrobocopy --backend=python -h` for full usage details.
+
 ## Reference
 
 ### `RobocopyConfig`
