@@ -14,9 +14,7 @@ from robocopy import (
 )
 
 
-# ==================== #
 # Functional API Tests #
-# ==================== #
 def test_robocopy_src_not_exists():
     """Verify robocopy fails if source is missing."""
     with (
@@ -62,9 +60,7 @@ def test_robocopy_no_files_found():
             robocopy("src", "dst")
 
 
-# ==================== #
 # Runner Class Tests   #
-# ==================== #
 def test_runner_run_source_not_exists():
     """Verify that runner.run() raises NothingToLoadError if source does not exist."""
     config = RobocopyConfig(source=Path("non_existent_src"), destination=Path("dst"))
@@ -184,3 +180,20 @@ def test_runner_run_exception_handling():
         assert result.exit_code == 16
         assert "Permission denied" in result.errors
         mock_log_error.assert_any_call("Robocopy run failed fatally.", exc_info=True)
+
+
+def test_runner_discover_totals_value_error_edge_cases():
+    """Verify that discover_totals handles various value errors properly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    with patch("subprocess.run") as mock_run:
+        mock_proc = MagicMock()
+        # Ensure it handles floats, negatives with strange formatting, or non-ints
+        mock_proc.stdout = "Files : 10.5 20 30\n"
+        mock_run.return_value = mock_proc
+        assert runner.discover_totals() == 0
+
+        mock_proc.stdout = "Files : None 20 30\n"
+        mock_run.return_value = mock_proc
+        assert runner.discover_totals() == 0
