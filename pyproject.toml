@@ -42,3 +42,7 @@ dev = [
 ## #####
 [tool.hatch]
 build.targets.wheel.packages = [ "robocopy" ]
+
+[project.scripts]
+pyrobocopy = "robocopy.cli:main"
+robocopy = "robocopy.cli:main"
