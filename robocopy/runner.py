@@ -4,6 +4,8 @@
 ####################
 # Import Statement #
 ####################
+from __future__ import annotations
+
 import logging
 import subprocess
 
@@ -60,15 +62,18 @@ class RobocopyRunner:
             errors="replace",
             check=False,
         )
-        lines = proc.stdout.splitlines()
 
-        for line in reversed(lines):
-            if "Files :" in line:
-                parts = line.split()
-                try:
-                    return int(parts[2])
-                except (IndexError, ValueError):
-                    return 0
+        idx = proc.stdout.rfind("Files :")
+        if idx != -1:
+            end_idx = proc.stdout.find("\n", idx)
+            if end_idx == -1:
+                end_idx = len(proc.stdout)
+            line = proc.stdout[idx:end_idx]
+            parts = line.split()
+            try:
+                return int(parts[2])
+            except (IndexError, ValueError):
+                return 0
         return 0
 
     def run(
@@ -168,42 +173,27 @@ class RobocopyRunner:
             )
         return None
 
-    def _execute_robocopy(
-        self,
-        args: list[str],
-        parser: RobocopyParser,
-        result: RobocopyResult,
-        pbar: tqdm | None,
-    ) -> None:
-        """Execute the robocopy subprocess and process its output.
-
-        Parameters
-        ----------
-        args : list[str]
-            Command line arguments.
-        parser : RobocopyParser
-            The parser for extracting information from lines.
-        result : RobocopyResult
-            The result object to populate.
-        pbar : tqdm | None
-            The progress bar to update.
-        """
-        with subprocess.Popen(  # noqa: S603
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            errors="replace",
-            bufsize=1,
-        ) as proc:
-            self._process_output_stream(
-                proc=proc,
-                parser=parser,
-                result=result,
-                pbar=pbar,
-            )
-            proc.wait()
-            result.exit_code = proc.returncode
+        try:
+            with subprocess.Popen(  # noqa: S603
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                errors="replace",
+                bufsize=1,
+            ) as proc:
+                self._process_output_stream(
+                    proc=proc,
+                    parser=parser,
+                    result=result,
+                    pbar=pbar,
+                )
+                proc.wait()
+                result.exit_code = proc.returncode
+        except Exception as e:
+            self.log.error("Robocopy run failed fatally.", exc_info=True)
+            result.errors.append(str(e))
+            result.exit_code = 16
 
     def _process_output_stream(
         self,
