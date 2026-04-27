@@ -18,10 +18,10 @@ classifiers = [
 ]
 dependencies = [ "tqdm>=4.64" ]
 optional-dependencies.dev = [
-  "prek>0",
+  "prek>=0.3.10",
   "pytest>=9.0.3",
-  "ruff>=0.15.11",
-  "ty>0",
+  "ruff>=0.15.12",
+  "ty>=0.0.32",
 ]
 optional-dependencies.docs = [
   "mkdocstrings[python]",
