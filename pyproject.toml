@@ -7,7 +7,7 @@ requires = [ "hatchling" ]
 ## #######
 [project]
 name = "pyrobocopy"
-version = "1.0.2"
+version = "1.0.4"
 description = "thin python API for Window's robocopy utility"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -31,6 +31,8 @@ optional-dependencies.docs = [
 optional-dependencies.test = [
   "pytest>0",
 ]
+scripts.pyrobocopy = "robocopy.cli:main"
+scripts.robocopy = "robocopy.cli:main"
 
 [dependency-groups]
 dev = [
@@ -42,7 +44,3 @@ dev = [
 ## #####
 [tool.hatch]
 build.targets.wheel.packages = [ "robocopy" ]
-
-[project.scripts]
-pyrobocopy = "robocopy.cli:main"
-robocopy = "robocopy.cli:main"
