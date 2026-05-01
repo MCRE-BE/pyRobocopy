@@ -94,3 +94,9 @@ def test_validate_slash_in_exclude_dirs():
     config.selection.exclude_dirs = ["dir1", "/bad_dir"]
     with pytest.raises(ValueError, match=r"exclude_dirs item '/bad_dir' cannot start with '/'"):
         config.to_args()
+
+
+def test_validate_double_slash_allowed():
+    config = RobocopyConfig(source=Path("//server/share/src"), destination=Path("//server/share/dst"))
+    # Should not raise ValueError
+    config.validate()

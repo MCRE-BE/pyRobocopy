@@ -193,14 +193,14 @@ class RobocopyConfig:
         """
         # Validate paths
         for attr, path in [("source", self.source), ("destination", self.destination)]:
-            path_str = str(path)
+            path_str = str(path).replace("\\", "/")
             if not path_str.strip() or path_str == ".":
                 raise ValueError(f"{attr} path cannot be empty")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
                 )
-            if path_str.startswith("/"):
+            if path_str.startswith("/") and not path_str.startswith("//"):
                 raise ValueError(
                     f"{attr} path cannot start with '/'",
                 )
@@ -210,7 +210,8 @@ class RobocopyConfig:
             raise ValueError(
                 "File filter contains invalid characters",
             )
-        if self.files.startswith("/"):
+        files_str = self.files.replace("\\", "/")
+        if files_str.startswith("/") and not files_str.startswith("//"):
             raise ValueError(
                 "File filter cannot start with '/'",
             )
@@ -226,7 +227,8 @@ class RobocopyConfig:
                     raise ValueError(
                         f"{attr} item '{item_str}' contains invalid characters",
                     )
-                if item_str.startswith("/"):
+                item_normalized = item_str.replace("\\", "/")
+                if item_normalized.startswith("/") and not item_normalized.startswith("//"):
                     raise ValueError(
                         f"{attr} item '{item_str}' cannot start with '/'",
                     )
