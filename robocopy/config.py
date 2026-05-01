@@ -200,11 +200,19 @@ class RobocopyConfig:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
                 )
+            if path_str.startswith("/"):
+                raise ValueError(
+                    f"{attr} path cannot start with '/'",
+                )
 
         # Validate file filter
         if "\0" in self.files or "\n" in self.files or "\r" in self.files:
             raise ValueError(
                 "File filter contains invalid characters",
+            )
+        if self.files.startswith("/"):
+            raise ValueError(
+                "File filter cannot start with '/'",
             )
 
         # Validate exclusions
@@ -213,9 +221,14 @@ class RobocopyConfig:
             ("exclude_dirs", self.selection.exclude_dirs),
         ]:
             for item in items:
-                if "\0" in item or "\n" in item or "\r" in item:
+                item_str = str(item)
+                if "\0" in item_str or "\n" in item_str or "\r" in item_str:
                     raise ValueError(
-                        f"{attr} item '{item}' contains invalid characters",
+                        f"{attr} item '{item_str}' contains invalid characters",
+                    )
+                if item_str.startswith("/"):
+                    raise ValueError(
+                        f"{attr} item '{item_str}' cannot start with '/'",
                     )
 
     @classmethod

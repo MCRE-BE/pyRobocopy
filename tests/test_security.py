@@ -62,3 +62,35 @@ def test_validate_newline_in_exclude_dirs():
     config.selection.exclude_dirs = ["dir\n1", "dir2"]
     with pytest.raises(ValueError, match="exclude_dirs item 'dir\n1' contains invalid characters"):
         config.to_args()
+
+
+def test_validate_slash_in_source():
+    config = RobocopyConfig(source=Path("/etc/passwd"), destination=Path("dst"))
+    with pytest.raises(ValueError, match="source path cannot start with '/'"):
+        config.to_args()
+
+
+def test_validate_slash_in_destination():
+    config = RobocopyConfig(source=Path("src"), destination=Path("/etc/passwd"))
+    with pytest.raises(ValueError, match="destination path cannot start with '/'"):
+        config.to_args()
+
+
+def test_validate_slash_in_files():
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"), files="/bad.txt")
+    with pytest.raises(ValueError, match="File filter cannot start with '/'"):
+        config.to_args()
+
+
+def test_validate_slash_in_exclude_files():
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    config.selection.exclude_files = ["fine.txt", "/bad.txt"]
+    with pytest.raises(ValueError, match=r"exclude_files item '/bad.txt' cannot start with '/'"):
+        config.to_args()
+
+
+def test_validate_slash_in_exclude_dirs():
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    config.selection.exclude_dirs = ["dir1", "/bad_dir"]
+    with pytest.raises(ValueError, match=r"exclude_dirs item '/bad_dir' cannot start with '/'"):
+        config.to_args()
