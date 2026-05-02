@@ -23,22 +23,13 @@ def print_help() -> None:
     print()  # noqa: T201
 
 
-def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
-    """Parse command line arguments using a Python argparse backend.
-
-    Maps explicitly defined GNU-style long flags and Robocopy-style short flags
-    to a `RobocopyConfig` instance.
-
-    Parameters
-    ----------
-    args : list[str]
-        A list of command-line argument strings, excluding the program name.
+def _get_python_backend_parser() -> argparse.ArgumentParser:
+    """Create and configure the argparse parser for the Python backend.
 
     Returns
     -------
-    tuple[RobocopyConfig, bool]
-        A tuple containing the initialized `RobocopyConfig` and a boolean
-        indicating whether the smart progress feature should be enabled.
+    argparse.ArgumentParser
+        The configured parser instance.
     """
     parser = argparse.ArgumentParser(
         prog="pyrobocopy --backend=python",
@@ -96,6 +87,27 @@ def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
     # Runner args
     parser.add_argument("--smart-progress", action="store_true", help="Use smart progress")
 
+    return parser
+
+
+def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
+    """Parse command line arguments using a Python argparse backend.
+
+    Maps explicitly defined GNU-style long flags and Robocopy-style short flags
+    to a `RobocopyConfig` instance.
+
+    Parameters
+    ----------
+    args : list[str]
+        A list of command-line argument strings, excluding the program name.
+
+    Returns
+    -------
+    tuple[RobocopyConfig, bool]
+        A tuple containing the initialized `RobocopyConfig` and a boolean
+        indicating whether the smart progress feature should be enabled.
+    """
+    parser = _get_python_backend_parser()
     parsed_args = parser.parse_args(args)
 
     copy_opts = CopyOptions(
