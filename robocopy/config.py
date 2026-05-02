@@ -196,6 +196,8 @@ class RobocopyConfig:
             path_str = str(path)
             if not path_str.strip() or path_str == ".":
                 raise ValueError(f"{attr} path cannot be empty")
+            if path_str.startswith("/"):
+                raise ValueError(f"{attr} path cannot start with '/'")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
