@@ -40,7 +40,6 @@ ignore = [
       "BLE001", # blind-except
 
 
-      "E501", #  Line too long (82 > 79 characters) (E501)
       "E701", #  multiple statements on one line (colon)
 
       "D104", # Missing docstring in public package
@@ -67,12 +66,6 @@ ignore = [
 
       # todo : fix later
 
-      "W191",
-      "E111",
-      "E114",
-      "E117",
-      "E501",   # line too long
-      "B008",   # do not perform function calls in argument defaults
       "D206",
       "D300",
       "Q000",
