@@ -193,10 +193,10 @@ class RobocopyConfig:
         """
         # Validate paths
         for attr, path in [("source", self.source), ("destination", self.destination)]:
-            path_str = str(path).replace("\\", "/")
+            path_str = path.as_posix()
             if not path_str.strip() or path_str == ".":
                 raise ValueError(f"{attr} path cannot be empty")
-            if path_str.startswith("/"):
+            if path_str.startswith("/") and not path_str.startswith("//"):
                 raise ValueError(f"{attr} path cannot start with '/'")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
