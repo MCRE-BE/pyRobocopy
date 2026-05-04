@@ -194,8 +194,11 @@ class RobocopyConfig:
         # Validate paths
         for attr, path in [("source", self.source), ("destination", self.destination)]:
             path_str = str(path)
+            path_str = path_str.replace("\\", "/")
             if not path_str.strip() or path_str == ".":
                 raise ValueError(f"{attr} path cannot be empty")
+            if path_str.startswith("/") and not path_str.startswith("//"):
+                raise ValueError(f"{attr} path cannot start with '/'")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
@@ -338,9 +341,11 @@ class RobocopyConfig:
         if self.selection.exclude_extra:
             args.append("/XX")
         if self.selection.exclude_files:
-            args.extend(["/XF", *self.selection.exclude_files])
+            args.append("/XF")
+            args.extend(self.selection.exclude_files)
         if self.selection.exclude_dirs:
-            args.extend(["/XD", *self.selection.exclude_dirs])
+            args.append("/XD")
+            args.extend(self.selection.exclude_dirs)
         if self.selection.extra_flags:
             args.extend(self.selection.extra_flags)
 

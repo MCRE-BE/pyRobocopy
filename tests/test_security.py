@@ -62,3 +62,9 @@ def test_validate_newline_in_exclude_dirs():
     config.selection.exclude_dirs = ["dir\n1", "dir2"]
     with pytest.raises(ValueError, match="exclude_dirs item 'dir\n1' contains invalid characters"):
         config.to_args()
+
+
+def test_validate_double_slash_allowed():
+    config = RobocopyConfig(source=Path("//server/share/src"), destination=Path("//server/share/dst"))
+    # Should not raise ValueError
+    config.validate()
