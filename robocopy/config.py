@@ -193,18 +193,29 @@ class RobocopyConfig:
         """
         # Validate paths
         for attr, path in [("source", self.source), ("destination", self.destination)]:
-            path_str = str(path)
+            path_str = str(path).replace("\\", "/")
             if not path_str.strip() or path_str == ".":
                 raise ValueError(f"{attr} path cannot be empty")
+            if path_str.startswith("/"):
+                raise ValueError(f"{attr} path cannot start with '/'")
             if "\0" in path_str or "\n" in path_str or "\r" in path_str:
                 raise ValueError(
                     f"{attr} path contains invalid characters",
+                )
+            if path_str.startswith("/") and not path_str.startswith("//"):
+                raise ValueError(
+                    f"{attr} path cannot start with '/'",
                 )
 
         # Validate file filter
         if "\0" in self.files or "\n" in self.files or "\r" in self.files:
             raise ValueError(
                 "File filter contains invalid characters",
+            )
+        files_str = self.files.replace("\\", "/")
+        if files_str.startswith("/") and not files_str.startswith("//"):
+            raise ValueError(
+                "File filter cannot start with '/'",
             )
 
         # Validate exclusions
@@ -213,9 +224,15 @@ class RobocopyConfig:
             ("exclude_dirs", self.selection.exclude_dirs),
         ]:
             for item in items:
-                if "\0" in item or "\n" in item or "\r" in item:
+                item_str = str(item)
+                if "\0" in item_str or "\n" in item_str or "\r" in item_str:
                     raise ValueError(
-                        f"{attr} item '{item}' contains invalid characters",
+                        f"{attr} item '{item_str}' contains invalid characters",
+                    )
+                item_normalized = item_str.replace("\\", "/")
+                if item_normalized.startswith("/") and not item_normalized.startswith("//"):
+                    raise ValueError(
+                        f"{attr} item '{item_str}' cannot start with '/'",
                     )
 
     @classmethod

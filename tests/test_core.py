@@ -143,6 +143,94 @@ def test_runner_discover_totals_malformed_index_error():
         assert runner.discover_totals() == 0
 
 
+def test_runner_parse_stat_row_dirs():
+    """Verify that _parse_stat_row parses Dirs statistics correctly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    runner._parse_stat_row("    Dirs :         1         2         3         4         5         6", stats)
+
+    assert stats.dirs.total == 1
+    assert stats.dirs.copied == 2
+    assert stats.dirs.skipped == 3
+    assert stats.dirs.mismatched == 4
+    assert stats.dirs.failed == 5
+    assert stats.dirs.extras == 6
+
+
+def test_runner_parse_stat_row_files():
+    """Verify that _parse_stat_row parses Files statistics correctly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    runner._parse_stat_row("   Files :        10        20        30        40        50        60", stats)
+
+    assert stats.files.total == 10
+    assert stats.files.copied == 20
+    assert stats.files.skipped == 30
+    assert stats.files.mismatched == 40
+    assert stats.files.failed == 50
+    assert stats.files.extras == 60
+
+
+def test_runner_parse_stat_row_bytes():
+    """Verify that _parse_stat_row parses Bytes statistics correctly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    runner._parse_stat_row("   Bytes :       100       200       300       400       500       600", stats)
+
+    assert stats.bytes.total == 100
+    assert stats.bytes.copied == 200
+    assert stats.bytes.skipped == 300
+    assert stats.bytes.mismatched == 400
+    assert stats.bytes.failed == 500
+    assert stats.bytes.extras == 600
+
+
+def test_runner_parse_stat_row_value_error():
+    """Verify that _parse_stat_row silently ignores lines causing ValueError."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    runner._parse_stat_row("    Dirs :       one         2         3         4         5         6", stats)
+
+    # State should remain unchanged, the mock's dirs property will not be set
+    # with the StatRow object
+    assert not hasattr(stats, "dirs") or isinstance(stats.dirs, MagicMock)
+
+
+def test_runner_parse_stat_row_index_error():
+    """Verify that _parse_stat_row silently ignores lines causing IndexError."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    # Provide 7 parts exactly: ['Dirs', ':', '1', '2', '3', '4', '5']
+    # which causes IndexError on parts[7]
+    runner._parse_stat_row("    Dirs :         1         2         3         4         5", stats)
+
+    # State should remain unchanged
+    assert not hasattr(stats, "dirs") or isinstance(stats.dirs, MagicMock)
+
+
+def test_runner_parse_stat_row_short_line():
+    """Verify that _parse_stat_row ignores lines with less than 7 parts."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    stats = MagicMock()
+    # Provide 6 parts: ['Dirs', ':', '1', '2', '3', '4']
+    runner._parse_stat_row("    Dirs :         1         2         3         4", stats)
+
+    # State should remain unchanged
+    assert not hasattr(stats, "dirs") or isinstance(stats.dirs, MagicMock)
+
+
 def test_runner_discover_totals_malformed_value_error():
     """Verify that discover_totals handles malformed output correctly (ValueError)."""
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
