@@ -41,10 +41,8 @@ def test_parse_line_known_error(parser):
     line = "2023/10/24 10:00:00 ERROR 5 (0x00000005) Accessing Destination Directory C:\\Dest\\"
     result = parser.parse_line(line)
 
-    assert (
-        result
-        == "Error 5 (Access Denied): 2023/10/24 10:00:00 ERROR 5 (0x00000005) Accessing Destination Directory C:\\Dest\\"
-    )
+    _t = "Error 5 (Access Denied): 2023/10/24 10:00:00 ERROR 5 (0x00000005) Accessing Destination Directory C:\\Dest\\"
+    assert result == _t
 
 
 def test_parse_line_unknown_error(parser):
