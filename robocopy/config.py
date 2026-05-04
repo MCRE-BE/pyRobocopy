@@ -244,9 +244,7 @@ class RobocopyConfig:
         # Basic path extraction (assumes robocopy <src> <dst> [files])
         src = Path(tokens[1])
         dst = Path(tokens[2])
-        files = (
-            tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
-        )
+        files = tokens[3] if len(tokens) > 3 and not tokens[3].startswith("/") else "*.*"
 
         config = cls(
             source=src,
@@ -338,9 +336,11 @@ class RobocopyConfig:
         if self.selection.exclude_extra:
             args.append("/XX")
         if self.selection.exclude_files:
-            args.extend(["/XF", *self.selection.exclude_files])
+            args.append("/XF")
+            args.extend(self.selection.exclude_files)
         if self.selection.exclude_dirs:
-            args.extend(["/XD", *self.selection.exclude_dirs])
+            args.append("/XD")
+            args.extend(self.selection.exclude_dirs)
         if self.selection.extra_flags:
             args.extend(self.selection.extra_flags)
 
