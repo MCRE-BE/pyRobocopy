@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 from .config import RobocopyConfig
 from .error import NothingToLoadError
 from .parser import RobocopyParser
-from .types import RobocopyResult, RobocopyStatistics, StatRow
+from .types import FileResult, RobocopyResult, RobocopyStatistics, RobocopyStatus, StatRow
 
 
 ###########
@@ -98,6 +98,8 @@ class RobocopyRunner:
         # 2. Preparation
         total_files = self._get_total_files(smart_progress)
         args = self.config.to_args()
+        if smart_progress and "/V" not in [a.upper() for a in args]:
+            args.append("/V")
         parser = RobocopyParser(config=self.config)
         result = RobocopyResult(config=self.config, exit_code=0)
         pbar = self._init_progress_bar(smart_progress, total_files)
@@ -191,7 +193,7 @@ class RobocopyRunner:
         with subprocess.Popen(  # noqa: S603
             args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             errors="replace",
             bufsize=1,
@@ -232,21 +234,69 @@ class RobocopyRunner:
             parsed = parser.parse_line(
                 line=line,
             )
-            if isinstance(parsed, str):
-                if parsed.startswith("Error"):
-                    result.errors.append(parsed)
-                elif parsed == "SUMMARY_START":
-                    self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
-                    continue
-                elif parser.stats_found and ":" in parsed:
-                    self._parse_stat_row(
-                        line=parsed,
-                        stats=result.stats,
-                    )
-                    self.log.info(f"[Robocopy] {parsed}")
+            self._handle_parsed_line(parsed, result, pbar, line)
 
-            if pbar and "100%" in line:
+    def _handle_parsed_line(
+        self,
+        parsed: FileResult | str | None,
+        result: RobocopyResult,
+        pbar: tqdm | None,
+        raw_line: str,
+    ) -> None:
+        """Handle a single parsed line and update result/progress.
+
+        Parameters
+        ----------
+        parsed : FileResult | str | None
+            The parsed result from the line.
+        result : RobocopyResult
+            The result object to update.
+        pbar : tqdm | None
+            The progress bar to update.
+        raw_line : str
+            The raw line for fallback checks.
+        """
+        if isinstance(parsed, str):
+            self._handle_string_parsed(parsed, result)
+        elif isinstance(parsed, FileResult):
+            self._handle_file_result_parsed(parsed, pbar)
+        elif pbar and "100%" in raw_line:
+            # Fallback for large files without MT
+            pbar.update(1)
+
+    def _handle_string_parsed(self, parsed: str, result: RobocopyResult) -> None:
+        """Handle a string-parsed result (errors, summary markers, etc.)."""
+        if parsed.startswith("Error"):
+            result.errors.append(parsed)
+            self.log.error(f"[Robocopy] {parsed}")
+        elif parsed.startswith("RETRY_WAIT:"):
+            wait_time = parsed.split(":")[1]
+            self.log.warning(f"[Robocopy] Retrying in {wait_time} seconds...")
+        elif parsed == "SUMMARY_START":
+            self.log.info("[Robocopy] Total\tCopied\tSkipped\tMismatched\tFAILED\tExtras")
+        elif self.parser_context_found_stats(parsed):
+            self._parse_stat_row(
+                line=parsed,
+                stats=result.stats,
+            )
+            self.log.info(f"[Robocopy] {parsed}")
+
+    def _handle_file_result_parsed(self, parsed: FileResult, pbar: tqdm | None) -> None:
+        """Handle a FileResult-parsed result (file copied, skipped, etc.)."""
+        if pbar:
+            if parsed.status.counts_towards_total:
                 pbar.update(1)
+            if "Dir" in parsed.status.value:
+                pbar.set_postfix(dir=parsed.source_path.name, refresh=True)
+
+        if parsed.status == RobocopyStatus.FAILED:
+            self.log.warning(f"[Robocopy] Failed to process: {parsed.source_path}")
+
+    def parser_context_found_stats(self, parsed: str) -> bool:
+        """Helper to check if stats are found in the current context."""
+        # This is a bit of a hack since we don't have easy access to parser.stats_found here
+        # without passing the parser, but we can check the prefix.
+        return any(parsed.startswith(s) for s in ["Dirs :", "Files :", "Bytes :"])
 
     def _parse_stat_row(
         self,

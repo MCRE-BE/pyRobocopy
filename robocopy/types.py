@@ -43,14 +43,31 @@ class RobocopyStatus(Enum):
     """
 
     NEW_FILE = "New File"
+    NEW_DIR = "New Dir"
     NEWER = "Newer"
     OLDER = "Older"
     SAME = "*SAME*"
-    EXTRA = "*EXTRA*"
+    EXTRA_FILE = "*EXTRA File"
+    EXTRA_DIR = "*EXTRA Dir"
     MISMATCH = "*MISMATCH*"
+    MODIFIED = "Modified"
     TWEAKED = "Tweaked"
     FAILED = "FAILED"
+    LONELY = "Lonely"
     UNKNOWN = "Unknown"
+
+    @property
+    def counts_towards_total(self) -> bool:
+        """Indicates if this status represents a source file processed.
+
+        Excludes directories and 'Extra' files (destination only).
+        """
+        val = str(self.value)
+        if "Dir" in val:
+            return False
+        if "EXTRA" in val:
+            return False
+        return val != "Unknown"
 
 
 @dataclass

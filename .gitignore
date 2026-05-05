@@ -209,3 +209,7 @@ __marimo__/
 # AI
 .gemini/
 GEMINI.md
+
+# Test data
+test_src/
+test_dst/

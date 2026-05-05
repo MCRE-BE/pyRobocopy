@@ -4,6 +4,7 @@ import pytest
 
 from robocopy.config import RobocopyConfig
 from robocopy.parser import RobocopyParser
+from robocopy.types import FileResult, RobocopyStatus
 
 
 @pytest.fixture
@@ -20,10 +21,19 @@ def test_parse_line_empty(parser):
     assert parser.parse_line("\t\n") is None
 
 
-def test_parse_line_regular(parser):
-    """Test that a regular line returns the stripped line."""
+def test_parse_line_file_result(parser):
+    """Test that a file status line returns a FileResult object."""
     line = "  New File  \t\t 12345  file.txt  "
-    assert parser.parse_line(line) == "New File  \t\t 12345  file.txt"
+    result = parser.parse_line(line)
+    assert isinstance(result, FileResult)
+    assert result.status == RobocopyStatus.NEW_FILE
+    assert str(result.source_path).endswith("file.txt")
+
+
+def test_parse_line_misc(parser):
+    """Test that a non-significant line returns the stripped line."""
+    line = "  This is just some text  "
+    assert parser.parse_line(line) == "This is just some text"
 
 
 def test_parse_line_summary_start(parser):
