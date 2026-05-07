@@ -61,3 +61,28 @@ def test_parse_line_unknown_error(parser):
     result = parser.parse_line(line)
 
     assert result == "Error 999 (Unknown Error): 2023/10/24 10:00:00 ERROR 999 (0x000003E7) Something went wrong"
+
+def test_parse_line_retry(parser):
+    result = parser.parse_line("Waiting 10 seconds... Retrying...")
+    assert result == "RETRY_WAIT:10"
+
+def test_parse_line_index_error(parser):
+    # Coverage for `if parts[-1].endswith("%"): path_idx = -2` inside `try` branch where `IndexError` / `ValueError` occurs
+    # E.g. trigger index error. If parts only has 1 element and it ends with `%`, `path_idx` is `-2`, which raises `IndexError`
+    line = "Newer 100%"
+    # parts will be ["Newer", "100%"]
+    # kw matches "newer"
+    # parts[-1] ends with "%", so path_idx = -2
+    # parts[-2] is "Newer", source_path becomes Path("Newer")
+    # Actually wait. Let's make parts have 1 element?
+    # "mismatch%" -> parts = ["mismatch%"] -> parts[-1] is "mismatch%", path_idx = -2.
+    # parts[-2] raises IndexError!
+    result = parser.parse_line("mismatch%")
+    assert result == "mismatch%"
+
+def test_parse_line_100_percent(parser):
+    # parts[-1].endswith("%") should not raise exception if we have enough parts
+    line = "Newer        C:\\some\\file.txt 100%"
+    result = parser.parse_line(line)
+    assert isinstance(result, FileResult)
+    assert str(result.source_path) == "C:\\some\\file.txt"

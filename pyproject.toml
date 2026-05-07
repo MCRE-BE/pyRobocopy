@@ -36,7 +36,9 @@ scripts.robocopy = "robocopy.cli:main"
 
 [dependency-groups]
 dev = [
+  "coverage>=7.13.5",
   "pyrobocopy[dev,docs,test]",
+  "pytest-cov>=7.1.0",
 ]
 
 ## #####
@@ -44,3 +46,7 @@ dev = [
 ## #####
 [tool.hatch]
 build.targets.wheel.packages = [ "robocopy" ]
+
+[tool.coverage]
+run.relative_files = true
+run.source = [ "robocopy" ]
