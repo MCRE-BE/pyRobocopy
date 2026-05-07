@@ -133,9 +133,11 @@ def test_from_command_line_prefix_flags():
     assert config.copy.multi_threaded == 32
 
 def test_config_validate_empty_path():
-    from robocopy.config import RobocopyConfig
     from pathlib import Path
+
     import pytest
+
+    from robocopy.config import RobocopyConfig
     config = RobocopyConfig(source=Path("."), destination=Path("dst"))
     with pytest.raises(ValueError, match="source path cannot be empty"):
         config.validate()

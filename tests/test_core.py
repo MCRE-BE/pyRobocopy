@@ -310,7 +310,7 @@ def test_runner_handle_parsed_line_string():
     # Missing coverage for parsed string: test parser_context_found_stats directly via the string
 
 def test_runner_handle_parsed_line_file_result():
-    from robocopy.types import RobocopyStatus, FileResult, RobocopyResult
+    from robocopy.types import FileResult, RobocopyResult, RobocopyStatus
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
     result = RobocopyResult(config=config, exit_code=0)
