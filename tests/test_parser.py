@@ -62,13 +62,16 @@ def test_parse_line_unknown_error(parser):
 
     assert result == "Error 999 (Unknown Error): 2023/10/24 10:00:00 ERROR 999 (0x000003E7) Something went wrong"
 
+
 def test_parse_line_retry(parser):
     result = parser.parse_line("Waiting 10 seconds... Retrying...")
     assert result == "RETRY_WAIT:10"
 
+
 def test_parse_line_index_error(parser):
     result = parser.parse_line("mismatch%")
     assert result == "mismatch%"
+
 
 def test_parse_line_100_percent(parser):
     # parts[-1].endswith("%") should not raise exception if we have enough parts

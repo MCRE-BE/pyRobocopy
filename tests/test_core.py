@@ -256,14 +256,16 @@ def test_runner_discover_totals_no_files_line():
 
         assert runner.discover_totals() == 0
 
+
 def test_runner_run_with_smart_progress():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
-    with patch("pathlib.Path.exists", return_value=True), \
-         patch.object(runner, "discover_totals", return_value=10), \
-         patch("subprocess.Popen") as mock_popen, \
-         patch("robocopy.runner.tqdm") as mock_tqdm:
-
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(runner, "discover_totals", return_value=10),
+        patch("subprocess.Popen") as mock_popen,
+        patch("robocopy.runner.tqdm") as mock_tqdm,
+    ):
         process_mock = MagicMock()
         process_mock.stdout = ["  New File        C:\\file.txt 100%", "100%"]
         process_mock.returncode = 0
@@ -279,23 +281,24 @@ def test_runner_run_with_smart_progress():
         pbar_mock.close.assert_called_once()
         pbar_mock.update.assert_called()
 
+
 def test_runner_run_failure():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
-    with patch("pathlib.Path.exists", return_value=True), \
-         patch("subprocess.Popen") as mock_popen:
-
+    with patch("pathlib.Path.exists", return_value=True), patch("subprocess.Popen") as mock_popen:
         process_mock = MagicMock()
         process_mock.stdout = []
-        process_mock.returncode = 16 # Failed
+        process_mock.returncode = 16  # Failed
         process_mock.__enter__.return_value = process_mock
         mock_popen.return_value = process_mock
 
         result = runner.run()
         assert result.exit_code == 16
 
+
 def test_runner_handle_parsed_line_string():
     from robocopy.types import RobocopyResult
+
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
     result = RobocopyResult(config=config, exit_code=0)
@@ -309,8 +312,10 @@ def test_runner_handle_parsed_line_string():
 
     # Missing coverage for parsed string: test parser_context_found_stats directly via the string
 
+
 def test_runner_handle_parsed_line_file_result():
     from robocopy.types import FileResult, RobocopyResult, RobocopyStatus
+
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
     runner = RobocopyRunner(config=config)
     result = RobocopyResult(config=config, exit_code=0)
@@ -329,6 +334,7 @@ def test_runner_handle_parsed_line_file_result():
     fr = FileResult(status=RobocopyStatus.NEW_DIR, source_path=Path("dir1"))
     runner._handle_parsed_line(fr, result, pbar, "")
     pbar.set_postfix.assert_called()
+
 
 def test_runner_handle_parsed_line_fallback_pbar():
     config = RobocopyConfig(source=Path("src"), destination=Path("dst"))

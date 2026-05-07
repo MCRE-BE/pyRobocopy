@@ -117,8 +117,10 @@ def test_to_args_retry_options():
 
 def test_from_command_line_invalid():
     import pytest
+
     with pytest.raises(ValueError, match="must start with"):
         RobocopyConfig.from_command_line("notrobocopy src dst")
+
 
 def test_from_command_line_mir():
     config = RobocopyConfig.from_command_line("robocopy src dst /MIR")
@@ -126,11 +128,13 @@ def test_from_command_line_mir():
     assert config.copy.empty_subdirs is True
     assert config.copy.purge is True
 
+
 def test_from_command_line_prefix_flags():
     config = RobocopyConfig.from_command_line("robocopy src dst /R:10 /W:5 /MT:32")
     assert config.retry_count == 10
     assert config.retry_wait == 5
     assert config.copy.multi_threaded == 32
+
 
 def test_config_validate_empty_path():
     from pathlib import Path
@@ -138,26 +142,33 @@ def test_config_validate_empty_path():
     import pytest
 
     from robocopy.config import RobocopyConfig
+
     config = RobocopyConfig(source=Path("."), destination=Path("dst"))
     with pytest.raises(ValueError, match="source path cannot be empty"):
         config.validate()
 
+
 def test_from_command_line_boolean_flags():
     from robocopy.config import RobocopyConfig
+
     config = RobocopyConfig.from_command_line("robocopy src dst /V")
     assert config.logging.verbose is True
 
+
 def test_from_command_line_xf_xd_bug():
     from robocopy.config import RobocopyConfig
+
     config = RobocopyConfig.from_command_line("robocopy src dst /XD dir1 dir2 /XF file1.txt file2.txt")
     assert "dir1" in config.selection.exclude_dirs
     assert "dir2" in config.selection.exclude_dirs
     assert "file1.txt" in config.selection.exclude_files
     assert "file2.txt" in config.selection.exclude_files
 
+
 def test_from_command_line_boolean_flag_top_level_patched():
     # Since there are no top level _BOOLEAN_FLAGS, we mock one temporarily to hit that code path
     from robocopy.config import _BOOLEAN_FLAGS, RobocopyConfig
+
     _BOOLEAN_FLAGS["/DUMMY_BOOL"] = ("retry_count", "")
     config = RobocopyConfig.from_command_line("robocopy src dst /DUMMY_BOOL")
     assert config.retry_count is True
