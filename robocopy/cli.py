@@ -158,18 +158,19 @@ def parse_python_backend(args: list[str]) -> tuple[RobocopyConfig, bool]:
     return config, parsed_args.smart_progress
 
 
-def main() -> None:  # noqa: C901, PLR0912
-    """Main entrypoint for the `pyrobocopy` CLI tool.
+def _parse_global_args(args: list[str]) -> tuple[str, list[str]]:
+    """Extract the backend and remaining arguments from the command-line arguments.
 
-    Extracts the global `--backend` argument and routes the remaining
-    arguments to the appropriate parsing logic before executing the runner.
+    Parameters
+    ----------
+    args : list[str]
+        The list of command-line arguments.
+
+    Returns
+    -------
+    tuple[str, list[str]]
+        A tuple containing the backend name and the remaining arguments.
     """
-    args = sys.argv[1:]
-
-    if not args or args[0] in ("help", "--help", "-h"):
-        print_help()
-        sys.exit(0)
-
     backend = "windows"
     remaining_args = []
 
@@ -183,6 +184,47 @@ def main() -> None:  # noqa: C901, PLR0912
         else:
             remaining_args.append(arg)
 
+    return backend, remaining_args
+
+
+def _handle_windows_backend(args: list[str]) -> RobocopyConfig:
+    """Handle the Windows backend by parsing robocopy-style arguments.
+
+    Parameters
+    ----------
+    args : list[str]
+        The list of robocopy-style command-line arguments.
+
+    Returns
+    -------
+    RobocopyConfig
+        The initialized `RobocopyConfig` instance.
+    """
+    # Quote arguments that contain spaces but keep the robocopy prefix
+    cmd_parts = ["robocopy"]
+    for arg in args:
+        if " " in arg and not arg.startswith('"') and not arg.endswith('"'):
+            cmd_parts.append(f'"{arg}"')
+        else:
+            cmd_parts.append(arg)
+    cmd_string = " ".join(cmd_parts)
+    return RobocopyConfig.from_command_line(cmd_string)
+
+
+def main() -> None:
+    """Main entrypoint for the `pyrobocopy` CLI tool.
+
+    Extracts the global `--backend` argument and routes the remaining
+    arguments to the appropriate parsing logic before executing the runner.
+    """
+    args = sys.argv[1:]
+
+    if not args or args[0] in ("help", "--help", "-h"):
+        print_help()
+        sys.exit(0)
+
+    backend, remaining_args = _parse_global_args(args)
+
     if not remaining_args and backend != "interactive":
         print_help()
         sys.exit(1)
@@ -190,18 +232,11 @@ def main() -> None:  # noqa: C901, PLR0912
     if backend == "interactive":
         print("Interactive CLI interface is not yet implemented.")  # noqa: T201
         sys.exit(0)
-    elif backend == "python":
+
+    if backend == "python":
         config, smart_progress = parse_python_backend(remaining_args)
     elif backend == "windows":
-        # Quote arguments that contain spaces but keep the robocopy prefix
-        cmd_parts = ["robocopy"]
-        for arg in remaining_args:
-            if " " in arg and not arg.startswith('"') and not arg.endswith('"'):
-                cmd_parts.append(f'"{arg}"')
-            else:
-                cmd_parts.append(arg)
-        cmd_string = " ".join(cmd_parts)
-        config = RobocopyConfig.from_command_line(cmd_string)
+        config = _handle_windows_backend(remaining_args)
         smart_progress = False
     else:
         print(f"Unknown backend: {backend}")  # noqa: T201
