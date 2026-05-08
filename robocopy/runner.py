@@ -98,7 +98,7 @@ class RobocopyRunner:
         # 2. Preparation
         total_files = self._get_total_files(smart_progress)
         args = self.config.to_args()
-        if smart_progress and "/V" not in [a.upper() for a in args]:
+        if smart_progress and not any(a.upper() == "/V" for a in args):
             args.append("/V")
         parser = RobocopyParser(config=self.config)
         result = RobocopyResult(config=self.config, exit_code=0)
