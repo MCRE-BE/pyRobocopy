@@ -174,3 +174,33 @@ def test_from_command_line_boolean_flag_top_level_patched():
     assert config.retry_count is True
     # Clean up
     del _BOOLEAN_FLAGS["/DUMMY_BOOL"]
+
+
+def test_import_compatibility_fallback():
+    """Test that the import fallback for Self works on older Python versions."""
+    import importlib
+    from unittest.mock import MagicMock, patch
+
+    import robocopy.config
+
+    # We simulate a Python version < 3.11 and ensure typing_extensions is mocked
+    mock_typing_extensions = MagicMock()
+    mock_typing_extensions.Self = "MockSelf"
+
+    with (
+        patch.dict(
+            "sys.modules",
+            {"typing_extensions": mock_typing_extensions},
+        ),
+        patch(
+            "sys.version_info",
+            (3, 10, 0),
+        ),
+    ):
+        # Force a reload of the module to re-execute the import logic
+        importlib.reload(robocopy.config)
+        # Verify it used typing_extensions.Self
+        assert robocopy.config.Self == "MockSelf"
+
+    # Restore the module state for subsequent tests
+    importlib.reload(robocopy.config)
