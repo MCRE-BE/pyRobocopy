@@ -1,14 +1,14 @@
+import argparse
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from robocopy.cli import main
+from robocopy.cli import _get_python_backend_parser, main, parse_python_backend
 
 
 def test_cli_help(capsys):
-    import pytest
-
     with patch.object(sys, "argv", ["pyrobocopy", "help"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -21,8 +21,6 @@ def test_cli_help(capsys):
 
 
 def test_cli_interactive(capsys):
-    import pytest
-
     with patch.object(sys, "argv", ["pyrobocopy", "--language=interactive"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -33,8 +31,6 @@ def test_cli_interactive(capsys):
 
 
 def test_cli_python_backend(capsys):
-    import pytest
-
     with patch.object(sys, "argv", ["pyrobocopy", "--language=python", "-h"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -45,8 +41,6 @@ def test_cli_python_backend(capsys):
 
 
 def test_cli_unknown_backend(capsys):
-    import pytest
-
     with patch.object(sys, "argv", ["pyrobocopy", "--language=unknown", "a", "b"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -54,9 +48,6 @@ def test_cli_unknown_backend(capsys):
 
     out, _err = capsys.readouterr()
     assert "Unknown backend: unknown" in out
-
-
-from robocopy.cli import parse_python_backend
 
 
 def test_parse_python_backend_defaults():
@@ -105,8 +96,6 @@ def test_parse_python_backend_short_args():
 
 @patch("robocopy.cli.RobocopyRunner")
 def test_cli_windows_backend(mock_runner):
-    import pytest
-
     # Mock the runner to return a dummy result
     mock_instance = mock_runner.return_value
     mock_instance.run.return_value.exit_code = 0
@@ -126,8 +115,6 @@ def test_cli_windows_backend(mock_runner):
 
 @patch("robocopy.cli.RobocopyRunner")
 def test_cli_python_backend_execution(mock_runner):
-    import pytest
-
     mock_instance = mock_runner.return_value
     mock_instance.run.return_value.exit_code = 0
 
@@ -144,11 +131,6 @@ def test_cli_python_backend_execution(mock_runner):
 
 
 def test_main_backend_interactive(capsys):
-    import sys
-    from unittest.mock import patch
-
-    from robocopy.cli import main
-
     with patch.object(sys, "argv", ["pyrobocopy"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -163,10 +145,6 @@ def test_main_backend_interactive(capsys):
 
 
 def test_main_nothing_to_load_error(capsys):
-    import sys
-    from unittest.mock import patch
-
-    from robocopy.cli import main
     from robocopy.error import NothingToLoadError
 
     with patch("robocopy.cli.RobocopyRunner") as mock_runner:
@@ -181,11 +159,6 @@ def test_main_nothing_to_load_error(capsys):
 
 
 def test_main_windows_backend_quoted_spaces(capsys):
-    import sys
-    from unittest.mock import patch
-
-    from robocopy.cli import main
-
     with patch("robocopy.cli.RobocopyRunner") as mock_runner:
         mock_instance = mock_runner.return_value
         mock_instance.run.return_value.exit_code = 0
@@ -198,11 +171,6 @@ def test_main_windows_backend_quoted_spaces(capsys):
 
 
 def test_main_cli_help_no_args(capsys):
-    import sys
-    from unittest.mock import patch
-
-    from robocopy.cli import main
-
     with patch.object(sys, "argv", ["pyrobocopy"]):
         with pytest.raises(SystemExit) as e:
             main()
@@ -212,14 +180,36 @@ def test_main_cli_help_no_args(capsys):
 
 
 def test_main_cli_backend_empty_remaining(capsys):
-    import sys
-    from unittest.mock import patch
-
-    from robocopy.cli import main
-
     with patch.object(sys, "argv", ["pyrobocopy", "--backend=windows"]):
         with pytest.raises(SystemExit) as e:
             main()
         assert e.value.code == 1
     out, _ = capsys.readouterr()
     assert "Usage: pyrobocopy" in out
+
+
+def test_get_python_backend_parser():
+    parser = _get_python_backend_parser()
+    assert isinstance(parser, argparse.ArgumentParser)
+    assert parser.prog == "pyrobocopy --backend=python"
+    assert parser.description == "Python argparse backend for pyrobocopy"
+
+    # Test defaults
+    args = ["src", "dst"]
+    parsed = parser.parse_args(args)
+    assert parsed.source == Path("src")
+    assert parsed.destination == Path("dst")
+    assert parsed.files == ["*.*"]
+    assert parsed.multi_threaded == 8
+    assert parsed.exclude_older is True
+    assert parsed.no_dir_list is True
+    assert parsed.retry_count == 3
+
+    # Test overridden values
+    args = ["src", "dst", "f1", "-s", "-mt", "16", "--no-exclude-older", "--list-dirs"]
+    parsed = parser.parse_args(args)
+    assert parsed.files == ["f1"]
+    assert parsed.subdirs is True
+    assert parsed.multi_threaded == 16
+    assert parsed.exclude_older is False
+    assert parsed.no_dir_list is False
