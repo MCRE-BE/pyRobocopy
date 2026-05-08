@@ -484,6 +484,7 @@ version = "1.0.4"
 source = { editable = "." }
 dependencies = [
     { name = "tqdm" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 
 [package.optional-dependencies]
@@ -519,6 +520,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.12" },
     { name = "tqdm", specifier = ">=4.64" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.34" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.12.0" },
     { name = "zensical", marker = "extra == 'docs'" },
 ]
 provides-extras = ["dev", "docs", "test"]
