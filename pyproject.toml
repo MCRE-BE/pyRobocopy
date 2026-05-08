@@ -7,7 +7,7 @@ requires = [ "hatchling" ]
 ## #######
 [project]
 name = "pyrobocopy"
-version = "1.0.4"
+version = "1.0.5"
 description = "thin python API for Window's robocopy utility"
 readme = "README.md"
 requires-python = ">=3.10"

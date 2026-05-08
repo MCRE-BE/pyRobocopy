@@ -480,7 +480,7 @@ wheels = [
 
 [[package]]
 name = "pyrobocopy"
-version = "1.0.4"
+version = "1.0.5"
 source = { editable = "." }
 dependencies = [
     { name = "tqdm" },
@@ -520,7 +520,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.12" },
     { name = "tqdm", specifier = ">=4.64" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.34" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.12.0" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.12" },
     { name = "zensical", marker = "extra == 'docs'" },
 ]
 provides-extras = ["dev", "docs", "test"]
@@ -529,7 +529,7 @@ provides-extras = ["dev", "docs", "test"]
 dev = [
     { name = "coverage", specifier = ">=7.13.5" },
     { name = "pyrobocopy", extras = ["dev", "docs", "test"] },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "pytest-cov", specifier = ">=7.1" },
 ]
 
 [[package]]
