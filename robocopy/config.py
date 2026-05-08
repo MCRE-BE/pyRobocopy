@@ -251,7 +251,8 @@ class RobocopyConfig:
         ValueError
             If the command string does not start with 'robocopy'.
         """
-        tokens = shlex.split(cmd_string)
+        tokens = shlex.split(cmd_string, posix=False)
+        tokens = [t.strip('"').strip("'") for t in tokens]
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
