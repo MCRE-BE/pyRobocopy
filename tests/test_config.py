@@ -187,12 +187,15 @@ def test_import_compatibility_fallback():
     mock_typing_extensions = MagicMock()
     mock_typing_extensions.Self = "MockSelf"
 
-    with patch.dict(
-        "sys.modules",
-        {"typing_extensions": mock_typing_extensions},
-    ) and patch(
-        "sys.version_info",
-        (3, 10, 0),
+    with (
+        patch.dict(
+            "sys.modules",
+            {"typing_extensions": mock_typing_extensions},
+        ),
+        patch(
+            "sys.version_info",
+            (3, 10, 0),
+        ),
     ):
         # Force a reload of the module to re-execute the import logic
         importlib.reload(robocopy.config)
