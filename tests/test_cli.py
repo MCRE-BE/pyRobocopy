@@ -1,6 +1,8 @@
 import sys
 from unittest.mock import patch
 
+import pytest
+
 from robocopy.cli import main
 
 
@@ -139,3 +141,85 @@ def test_cli_python_backend_execution(mock_runner):
     assert str(config.source) == "src"
     assert str(config.destination) == "dst"
     assert config.copy.subdirs is True
+
+
+def test_main_backend_interactive(capsys):
+    import sys
+    from unittest.mock import patch
+
+    from robocopy.cli import main
+
+    with patch.object(sys, "argv", ["pyrobocopy"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 0
+
+    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 0
+    out, _ = capsys.readouterr()
+    assert "Interactive CLI interface is not yet implemented." in out
+
+
+def test_main_nothing_to_load_error(capsys):
+    import sys
+    from unittest.mock import patch
+
+    from robocopy.cli import main
+    from robocopy.error import NothingToLoadError
+
+    with patch("robocopy.cli.RobocopyRunner") as mock_runner:
+        mock_instance = mock_runner.return_value
+        mock_instance.run.side_effect = NothingToLoadError("Fake error")
+        with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=windows"]):
+            with pytest.raises(SystemExit) as e:
+                main()
+            assert e.value.code == 1
+        out, _ = capsys.readouterr()
+        assert "Fake error" in out
+
+
+def test_main_windows_backend_quoted_spaces(capsys):
+    import sys
+    from unittest.mock import patch
+
+    from robocopy.cli import main
+
+    with patch("robocopy.cli.RobocopyRunner") as mock_runner:
+        mock_instance = mock_runner.return_value
+        mock_instance.run.return_value.exit_code = 0
+        with patch.object(sys, "argv", ["pyrobocopy", "src path", "dst", "--backend=windows"]):
+            with pytest.raises(SystemExit) as e:
+                main()
+            assert e.value.code == 0
+        config = mock_runner.call_args[0][0]
+        assert str(config.source) == "src path"
+
+
+def test_main_cli_help_no_args(capsys):
+    import sys
+    from unittest.mock import patch
+
+    from robocopy.cli import main
+
+    with patch.object(sys, "argv", ["pyrobocopy"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 0
+    out, _ = capsys.readouterr()
+    assert "Usage: pyrobocopy" in out
+
+
+def test_main_cli_backend_empty_remaining(capsys):
+    import sys
+    from unittest.mock import patch
+
+    from robocopy.cli import main
+
+    with patch.object(sys, "argv", ["pyrobocopy", "--backend=windows"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 1
+    out, _ = capsys.readouterr()
+    assert "Usage: pyrobocopy" in out

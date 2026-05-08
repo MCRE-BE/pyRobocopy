@@ -1,5 +1,7 @@
 # pyRobocopy
 
+[![codecov](https://codecov.io/gh/MCRE-BE/pyRobocopy/branch/main/graph/badge.svg)](https://codecov.io/gh/MCRE-BE/pyRobocopy)
+
 A high-performance, object-oriented Python wrapper for the Windows `robocopy` utility. This library is designed to replace slow Python-level file synchronization with fast, robust, OS-level execution.
 
 ## Key Features
@@ -65,7 +67,6 @@ config = RobocopyConfig.from_command_line(cmd)
 runner = RobocopyRunner(config)
 result = runner.run()
 ```
-
 
 ## Command-Line Interface (CLI)
 
