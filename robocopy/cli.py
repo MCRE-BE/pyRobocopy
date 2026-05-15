@@ -211,6 +211,31 @@ def _handle_windows_backend(args: list[str]) -> RobocopyConfig:
     return RobocopyConfig.from_command_line(cmd_string)
 
 
+def _get_config_and_smart_progress(backend: str, remaining_args: list[str]) -> tuple[RobocopyConfig, bool]:
+    """Route arguments to the appropriate backend and return the config.
+
+    Parameters
+    ----------
+    backend : str
+        The backend name (windows or python).
+    remaining_args : list[str]
+        The arguments to pass to the backend.
+
+    Returns
+    -------
+    tuple[RobocopyConfig, bool]
+        The initialized RobocopyConfig and a boolean for smart progress.
+    """
+    if backend == "python":
+        return parse_python_backend(remaining_args)
+
+    if backend == "windows":
+        return _handle_windows_backend(remaining_args), False
+
+    print(f"Unknown backend: {backend}")  # noqa: T201
+    sys.exit(1)
+
+
 def main() -> None:
     """Main entrypoint for the `pyrobocopy` CLI tool.
 
@@ -233,14 +258,10 @@ def main() -> None:
         print("Interactive CLI interface is not yet implemented.")  # noqa: T201
         sys.exit(0)
 
-    if backend == "python":
-        config, smart_progress = parse_python_backend(remaining_args)
-    elif backend == "windows":
-        config = _handle_windows_backend(remaining_args)
-        smart_progress = False
-    else:
-        print(f"Unknown backend: {backend}")  # noqa: T201
-        sys.exit(1)
+    config, smart_progress = _get_config_and_smart_progress(
+        backend,
+        remaining_args,
+    )
 
     runner = RobocopyRunner(config)
     try:

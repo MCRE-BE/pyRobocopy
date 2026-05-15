@@ -5,28 +5,41 @@ from unittest.mock import patch
 
 import pytest
 
-from robocopy.cli import _get_python_backend_parser, main, parse_python_backend
+from robocopy.cli import (
+    _get_config_and_smart_progress,
+    _get_python_backend_parser,
+    main,
+    parse_python_backend,
+    print_help,
+)
 
 
-def test_cli_help(capsys):
-    with patch.object(sys, "argv", ["pyrobocopy", "help"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-
-    out, _err = capsys.readouterr()
+def test_print_help(capsys):
+    """Verify that print_help outputs the expected help text."""
+    print_help()
+    out, _ = capsys.readouterr()
     assert "Usage: pyrobocopy [OPTIONS]" in out
     assert "--backend=windows" in out
     assert "--backend=python" in out
+    assert "interactive" in out.lower()
 
 
 def test_cli_interactive(capsys):
+    """Verify that the interactive backend correctly reports it is not implemented."""
+    # Test via --language
     with patch.object(sys, "argv", ["pyrobocopy", "--language=interactive"]):
         with pytest.raises(SystemExit) as e:
             main()
         assert e.value.code == 0
+    out, _ = capsys.readouterr()
+    assert "Interactive CLI interface is not yet implemented." in out
 
-    out, _err = capsys.readouterr()
+    # Test via --backend
+    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 0
+    out, _ = capsys.readouterr()
     assert "Interactive CLI interface is not yet implemented." in out
 
 
@@ -130,18 +143,13 @@ def test_cli_python_backend_execution(mock_runner):
     assert config.copy.subdirs is True
 
 
-def test_main_backend_interactive(capsys):
+def test_main_cli_help_no_args(capsys):
     with patch.object(sys, "argv", ["pyrobocopy"]):
         with pytest.raises(SystemExit) as e:
             main()
         assert e.value.code == 0
-
-    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
     out, _ = capsys.readouterr()
-    assert "Interactive CLI interface is not yet implemented." in out
+    assert "Usage: pyrobocopy" in out
 
 
 def test_main_nothing_to_load_error(capsys):
@@ -168,15 +176,6 @@ def test_main_windows_backend_quoted_spaces(capsys):
             assert e.value.code == 0
         config = mock_runner.call_args[0][0]
         assert str(config.source) == "src path"
-
-
-def test_main_cli_help_no_args(capsys):
-    with patch.object(sys, "argv", ["pyrobocopy"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-    out, _ = capsys.readouterr()
-    assert "Usage: pyrobocopy" in out
 
 
 def test_main_cli_backend_empty_remaining(capsys):
@@ -213,3 +212,21 @@ def test_get_python_backend_parser():
     assert parsed.multi_threaded == 16
     assert parsed.exclude_older is False
     assert parsed.no_dir_list is False
+
+
+def test_get_config_and_smart_progress():
+    # Test python backend
+    config, smart_progress = _get_config_and_smart_progress("python", ["src", "dst", "--smart-progress"])
+    assert str(config.source) == "src"
+    assert smart_progress is True
+
+    # Test windows backend
+    config, smart_progress = _get_config_and_smart_progress("windows", ["src", "dst", "/S"])
+    assert str(config.source) == "src"
+    assert config.copy.subdirs is True
+    assert smart_progress is False
+
+    # Test unknown backend
+    with pytest.raises(SystemExit) as e:
+        _get_config_and_smart_progress("unknown", ["src", "dst"])
+    assert e.value.code == 1

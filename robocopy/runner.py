@@ -296,7 +296,7 @@ class RobocopyRunner:
         """Helper to check if stats are found in the current context."""
         # This is a bit of a hack since we don't have easy access to parser.stats_found here
         # without passing the parser, but we can check the prefix.
-        return any(parsed.startswith(s) for s in ["Dirs :", "Files :", "Bytes :"])
+        return parsed.startswith(("Dirs :", "Files :", "Bytes :"))
 
     def _parse_stat_row(
         self,
