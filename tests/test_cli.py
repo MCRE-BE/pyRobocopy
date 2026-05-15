@@ -24,23 +24,15 @@ def test_print_help(capsys):
     assert "interactive" in out.lower()
 
 
-def test_cli_interactive(capsys):
-    """Verify that the interactive backend correctly reports it is not implemented."""
-    # Test via --language
-    with patch.object(sys, "argv", ["pyrobocopy", "--language=interactive"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-    out, _ = capsys.readouterr()
-    assert "Interactive CLI interface is not yet implemented." in out
-
+def test_cli_interactive():
+    """Verify that the interactive backend launches the TUI."""
     # Test via --backend
-    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-    out, _ = capsys.readouterr()
-    assert "Interactive CLI interface is not yet implemented." in out
+    with patch("robocopy.interactive.RobocopyInteractive.run") as mock_run:
+        with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
+            with pytest.raises(SystemExit) as e:
+                main()
+            assert e.value.code == 0
+        mock_run.assert_called_once()
 
 
 def test_cli_python_backend(capsys):

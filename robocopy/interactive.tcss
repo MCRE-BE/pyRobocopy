@@ -1,0 +1,123 @@
+Screen {
+    background: #1a1b26;
+}
+
+#main-container {
+    height: 100%;
+    width: 100%;
+}
+
+#path-panel {
+    width: 35%;
+    height: 100%;
+    border-right: solid $accent;
+    background: #16161e;
+    padding: 1;
+}
+
+#options-panel {
+    width: 65%;
+    height: 100%;
+}
+
+.section-title {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+    margin-top: 1;
+}
+
+/* Path Inputs with Clear Buttons */
+.input-group {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 1;
+}
+
+.input-group Input {
+    width: 1fr;
+    margin-bottom: 0;
+    border: tall $accent;
+}
+
+.btn-clear {
+    width: 5;
+    min-width: 5;
+    margin-left: 1;
+    background: $error;
+    color: white;
+}
+
+/* Vertical Option Group */
+.option-group {
+    height: auto;
+    background: #24283b;
+    border: solid $accent;
+    padding: 1;
+    margin-bottom: 0;
+}
+
+.compact-option {
+    height: auto;
+    min-height: 4;
+    layout: horizontal;
+    margin-bottom: 1;
+    align: left middle;
+}
+
+.label-container {
+    width: 1fr;
+    layout: vertical;
+    height: auto;
+}
+
+.compact-label {
+    text-style: bold;
+}
+
+.compact-desc {
+    color: $text-muted;
+}
+
+/* Switch Colors */
+Switch {
+    background: #e11d48; /* Vivid Red */
+}
+
+Switch.-on {
+    background: #22c55e; /* Vivid Green */
+}
+
+#command-preview-container {
+    height: 10;
+    background: $boost;
+    border: tall $accent;
+    padding: 1;
+    margin: 1;
+}
+
+#preview-header {
+    height: 3;
+    align: left middle;
+}
+
+#btn-generate-cmd {
+    width: auto;
+    margin-left: 2;
+    margin-top: 0;
+}
+
+#command-text {
+    color: $accent;
+    text-style: bold;
+    padding: 1 0;
+}
+
+#btn-run {
+    width: 100%;
+    margin-top: 2;
+}
+
+#help-text {
+    padding: 1;
+}

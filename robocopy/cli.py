@@ -255,7 +255,10 @@ def main() -> None:
         sys.exit(1)
 
     if backend == "interactive":
-        print("Interactive CLI interface is not yet implemented.")  # noqa: T201
+        from .interactive import RobocopyInteractive
+
+        app = RobocopyInteractive()
+        app.run()
         sys.exit(0)
 
     config, smart_progress = _get_config_and_smart_progress(

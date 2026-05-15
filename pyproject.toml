@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "textual>=8.2.6",
   "tqdm>=4.64",
   "typing-extensions>=4.12; python_full_version<'3.11'",
 ]
@@ -42,8 +43,9 @@ scripts.robocopy = "robocopy.cli:main"
 
 [dependency-groups]
 dev = [
-  "coverage>=7.14.0",
+  "coverage>=7.14",
   "pyrobocopy[dev,docs,test]",
+  "pytest-asyncio>=1.3",
   "pytest-cov>=7.1",
 ]
 
