@@ -24,10 +24,10 @@ dependencies = [
   "typing-extensions>=4.12; python_full_version<'3.11'",
 ]
 optional-dependencies.dev = [
-  "prek>=0.3.10",
+  "prek>=0.3.13",
   "pytest>=9.0.3",
   "ruff>=0.15.12",
-  "ty>=0.0.34",
+  "ty>=0.0.35",
 ]
 optional-dependencies.docs = [
   "mkdocstrings[python]",
@@ -42,7 +42,7 @@ scripts.robocopy = "robocopy.cli:main"
 
 [dependency-groups]
 dev = [
-  "coverage>=7.13.5",
+  "coverage>=7.14.0",
   "pyrobocopy[dev,docs,test]",
   "pytest-cov>=7.1",
 ]
