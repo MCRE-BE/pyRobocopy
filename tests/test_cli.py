@@ -5,19 +5,23 @@ from unittest.mock import patch
 
 import pytest
 
-from robocopy.cli import _get_python_backend_parser, main, parse_python_backend
+from robocopy.cli import (
+    _get_config_and_smart_progress,
+    _get_python_backend_parser,
+    main,
+    parse_python_backend,
+    print_help,
+)
 
 
-def test_cli_help(capsys):
-    with patch.object(sys, "argv", ["pyrobocopy", "help"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-
-    out, _err = capsys.readouterr()
+def test_print_help(capsys):
+    """Verify that print_help outputs the expected help text."""
+    print_help()
+    out, _ = capsys.readouterr()
     assert "Usage: pyrobocopy [OPTIONS]" in out
     assert "--backend=windows" in out
     assert "--backend=python" in out
+    assert "interactive" not in out.lower()
 
 
 def test_cli_interactive(capsys):
@@ -213,3 +217,21 @@ def test_get_python_backend_parser():
     assert parsed.multi_threaded == 16
     assert parsed.exclude_older is False
     assert parsed.no_dir_list is False
+
+
+def test_get_config_and_smart_progress():
+    # Test python backend
+    config, smart_progress = _get_config_and_smart_progress("python", ["src", "dst", "--smart-progress"])
+    assert str(config.source) == "src"
+    assert smart_progress is True
+
+    # Test windows backend
+    config, smart_progress = _get_config_and_smart_progress("windows", ["src", "dst", "/S"])
+    assert str(config.source) == "src"
+    assert config.copy.subdirs is True
+    assert smart_progress is False
+
+    # Test unknown backend
+    with pytest.raises(SystemExit) as e:
+        _get_config_and_smart_progress("unknown", ["src", "dst"])
+    assert e.value.code == 1

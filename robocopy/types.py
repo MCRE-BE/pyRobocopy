@@ -62,7 +62,7 @@ class RobocopyStatus(Enum):
 
         Excludes directories and 'Extra' files (destination only).
         """
-        val = str(self.value)
+        val = self.value
         if "Dir" in val:
             return False
         if "EXTRA" in val:
