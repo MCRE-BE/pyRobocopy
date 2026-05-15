@@ -21,16 +21,25 @@ def test_print_help(capsys):
     assert "Usage: pyrobocopy [OPTIONS]" in out
     assert "--backend=windows" in out
     assert "--backend=python" in out
-    assert "interactive" not in out.lower()
+    assert "interactive" in out.lower()
 
 
 def test_cli_interactive(capsys):
+    """Verify that the interactive backend correctly reports it is not implemented."""
+    # Test via --language
     with patch.object(sys, "argv", ["pyrobocopy", "--language=interactive"]):
         with pytest.raises(SystemExit) as e:
             main()
         assert e.value.code == 0
+    out, _ = capsys.readouterr()
+    assert "Interactive CLI interface is not yet implemented." in out
 
-    out, _err = capsys.readouterr()
+    # Test via --backend
+    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
+        with pytest.raises(SystemExit) as e:
+            main()
+        assert e.value.code == 0
+    out, _ = capsys.readouterr()
     assert "Interactive CLI interface is not yet implemented." in out
 
 
@@ -134,18 +143,13 @@ def test_cli_python_backend_execution(mock_runner):
     assert config.copy.subdirs is True
 
 
-def test_main_backend_interactive(capsys):
+def test_main_cli_help_no_args(capsys):
     with patch.object(sys, "argv", ["pyrobocopy"]):
         with pytest.raises(SystemExit) as e:
             main()
         assert e.value.code == 0
-
-    with patch.object(sys, "argv", ["pyrobocopy", "src", "dst", "--backend=interactive"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
     out, _ = capsys.readouterr()
-    assert "Interactive CLI interface is not yet implemented." in out
+    assert "Usage: pyrobocopy" in out
 
 
 def test_main_nothing_to_load_error(capsys):
@@ -172,15 +176,6 @@ def test_main_windows_backend_quoted_spaces(capsys):
             assert e.value.code == 0
         config = mock_runner.call_args[0][0]
         assert str(config.source) == "src path"
-
-
-def test_main_cli_help_no_args(capsys):
-    with patch.object(sys, "argv", ["pyrobocopy"]):
-        with pytest.raises(SystemExit) as e:
-            main()
-        assert e.value.code == 0
-    out, _ = capsys.readouterr()
-    assert "Usage: pyrobocopy" in out
 
 
 def test_main_cli_backend_empty_remaining(capsys):
