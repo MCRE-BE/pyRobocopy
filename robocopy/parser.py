@@ -58,6 +58,11 @@ class RobocopyParser:
         "lonely": RobocopyStatus.LONELY,
     }
 
+    _status_re = re.compile(
+        "|".join(re.escape(k) for k in sorted(_STATUS_MAP.keys(), key=len, reverse=True)),
+        re.IGNORECASE,
+    )
+
     def __init__(self, config: RobocopyConfig):
         self.config = config
         self.stats_found = False
@@ -98,23 +103,22 @@ class RobocopyParser:
             return "SUMMARY_START"
 
         # Check for file status (case-insensitive)
-        line_lower = line_stripped.lower()
-        for kw, status in self._STATUS_MAP.items():
-            if kw in line_lower:
-                parts = line_stripped.split()
-                if parts:
-                    # In some cases, the last part might be '100%' if it's on the same line
-                    path_idx = -1
-                    if parts[-1].endswith("%"):
-                        path_idx = -2
+        if match := self._status_re.search(line_stripped):
+            status = self._STATUS_MAP[match.group(0).lower()]
+            parts = line_stripped.split()
+            if parts:
+                # In some cases, the last part might be '100%' if it's on the same line
+                path_idx = -1
+                if parts[-1].endswith("%"):
+                    path_idx = -2
 
-                    try:
-                        res = FileResult(
-                            status=status,
-                            source_path=Path(parts[path_idx]),
-                        )
-                        return res  # noqa: TRY300
-                    except (IndexError, ValueError):
-                        continue
+                try:
+                    res = FileResult(
+                        status=status,
+                        source_path=Path(parts[path_idx]),
+                    )
+                    return res  # noqa: TRY300
+                except (IndexError, ValueError):
+                    pass
 
         return line_stripped
