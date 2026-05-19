@@ -59,7 +59,7 @@ class RobocopyParser:
     }
 
     _status_re = re.compile(
-        "|".join(re.escape(k) for k in sorted(_STATUS_MAP.keys(), key=len, reverse=True)),
+        "|".join(re.escape(str(k)) for k in sorted(_STATUS_MAP.keys(), key=len, reverse=True)),
         re.IGNORECASE,
     )
 
