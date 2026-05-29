@@ -145,3 +145,72 @@ async def test_interactive_quit():
     async with app.run_test() as pilot:
         await app.action_quit()
         await pilot.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_interactive_all_options():
+    """Test that all new options (inputs, switches) are correctly read and built into the config."""
+    app = RobocopyInteractive()
+    async with app.run_test() as pilot:
+        # Check defaults
+        config, smart_progress = app._build_config_from_ui()
+        assert config.copy.multi_threaded == 8
+        assert config.copy.copy_flags == "DAT"
+        assert config.copy.dir_copy_flags == "DA"
+        assert config.selection.exclude_older is True
+        assert config.logging.no_dir_list is True
+        assert config.logging.bytes_as_integers is True
+        assert config.retry_count == 3
+        assert config.retry_wait == 3
+        assert smart_progress is False
+
+        # Set custom values
+        app.query_one("#input-flag-MT", Input).value = "16"
+        app.query_one("#input-flag-COPY", Input).value = "D"
+        app.query_one("#input-flag-DCOPY", Input).value = "T"
+        app.query_one("#input-flag-XF", Input).value = "*.tmp *.log"
+        app.query_one("#input-flag-XD", Input).value = "temp cache"
+        app.query_one("#flag-XO", Switch).value = False
+        app.query_one("#flag-NJH", Switch).value = True
+        app.query_one("#flag-NJS", Switch).value = True
+        app.query_one("#input-flag-R", Input).value = "5"
+        app.query_one("#input-flag-W", Input).value = "10"
+        app.query_one("#flag-smart-progress", Switch).value = True
+
+        # Click generate to verify preview formats correctly
+        btn_gen = app.query_one("#btn-generate-cmd", Button)
+        btn_gen.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        cmd = app.command_str
+        assert "/MT:16" in cmd
+        assert "/COPY:D" in cmd
+        assert "/DCOPY:T" in cmd
+        assert "/XF" in cmd
+        assert "*.tmp" in cmd
+        assert "*.log" in cmd
+        assert "/XD" in cmd
+        assert "temp" in cmd
+        assert "cache" in cmd
+        assert "/XO" not in cmd
+        assert "/NJH" in cmd
+        assert "/NJS" in cmd
+        assert "/R:5" in cmd
+        assert "/W:10" in cmd
+
+        # Check built config again
+        config, smart_progress = app._build_config_from_ui()
+        assert config.copy.multi_threaded == 16
+        assert config.copy.copy_flags == "D"
+        assert config.copy.dir_copy_flags == "T"
+        assert config.selection.exclude_files == ["*.tmp", "*.log"]
+        assert config.selection.exclude_dirs == ["temp", "cache"]
+        assert config.selection.exclude_older is False
+        assert config.logging.no_job_header is True
+        assert config.logging.no_job_summary is True
+        assert config.retry_count == 5
+        assert config.retry_wait == 10
+        assert smart_progress is True
+
+        await pilot.exit(None)

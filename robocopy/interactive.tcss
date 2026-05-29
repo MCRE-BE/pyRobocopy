@@ -121,3 +121,11 @@ Switch.-on {
 #help-text {
     padding: 1;
 }
+
+.flag-input {
+    width: 25;
+    height: 3;
+    border: tall $accent;
+    margin-left: 1;
+    margin-right: 1;
+}
