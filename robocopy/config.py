@@ -354,6 +354,10 @@ class RobocopyConfig:
         args.append(f"/MT:{self.copy.multi_threaded}")
         if self.copy.fat_file_times:
             args.append("/FFT")
+        if self.copy.copy_flags != "DAT":
+            args.append(f"/COPY:{self.copy.copy_flags}")
+        if self.copy.dir_copy_flags != "DA":
+            args.append(f"/DCOPY:{self.copy.dir_copy_flags}")
 
     def _add_selection_args(self, args: list[str]) -> None:
         """Add selection configuration flags to the argument list."""
@@ -384,5 +388,9 @@ class RobocopyConfig:
             args.append("/FP")
         if self.logging.bytes_as_integers:
             args.append("/BYTES")
+        if self.logging.no_job_header:
+            args.append("/NJH")
+        if self.logging.no_job_summary:
+            args.append("/NJS")
         if self.logging.tee:
             args.append("/TEE")
