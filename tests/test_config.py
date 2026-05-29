@@ -3,6 +3,9 @@
 # Import Statement #
 ####################
 from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 from robocopy.config import (
     CopyOptions,
@@ -10,6 +13,13 @@ from robocopy.config import (
     RobocopyConfig,
     SelectionOptions,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_shutil_which():
+    """Mock shutil.which to return 'robocopy' for stable configuration test outputs."""
+    with patch("shutil.which", return_value="robocopy"):
+        yield
 
 
 #########

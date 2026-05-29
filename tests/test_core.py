@@ -313,6 +313,23 @@ def test_runner_handle_parsed_line_string():
     # Missing coverage for parsed string: test parser_context_found_stats directly via the string
 
 
+def test_runner_parser_context_found_stats():
+    """Verify that parser_context_found_stats identifies statistical lines correctly."""
+    config = RobocopyConfig(source=Path("src"), destination=Path("dst"))
+    runner = RobocopyRunner(config=config)
+
+    # Happy paths
+    assert runner.parser_context_found_stats("Dirs : 1 2 3") is True
+    assert runner.parser_context_found_stats("Files : 10 20 30") is True
+    assert runner.parser_context_found_stats("Bytes : 100 200 300") is True
+
+    # False cases
+    assert runner.parser_context_found_stats("   Dirs : 1 2 3") is False  # startswith is sensitive
+    assert runner.parser_context_found_stats("Total : 1 2 3") is False
+    assert runner.parser_context_found_stats("Something else") is False
+    assert runner.parser_context_found_stats("") is False
+
+
 def test_runner_handle_parsed_line_file_result():
     from robocopy.types import FileResult, RobocopyResult, RobocopyStatus
 
