@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from robocopy.runner import RobocopyRunner
 from robocopy.types import FileResult, RobocopyStatus
@@ -51,3 +51,43 @@ def test_runner_progress_update():
     assert pbar.update.call_count == 2
     assert pbar.set_postfix.call_count == 1
     pbar.set_postfix.assert_called_with(dir="dir1", refresh=True)
+
+
+def test_runner_get_total_files():
+    """Verify that _get_total_files behaves correctly based on smart progress."""
+    mock_config = MagicMock()
+    mock_config.source = Path("src")
+    mock_config.destination = Path("dst")
+    runner = RobocopyRunner(mock_config)
+
+    # 1. smart_progress = False -> Should return 0 without calling discover_totals
+    with patch.object(runner, "discover_totals") as mock_discover:
+        assert runner._get_total_files(smart_progress=False) == 0
+        mock_discover.assert_not_called()
+
+    # 2. smart_progress = True -> Should call discover_totals and return count
+    with patch.object(runner, "discover_totals", return_value=42) as mock_discover:
+        assert runner._get_total_files(smart_progress=True) == 42
+        mock_discover.assert_called_once()
+
+
+def test_runner_init_progress_bar():
+    """Verify that _init_progress_bar initializes a progress bar only when required."""
+    mock_config = MagicMock()
+    mock_config.source = Path("src")
+    mock_config.destination = Path("dst")
+    runner = RobocopyRunner(mock_config)
+
+    # 1. smart_progress = False -> Should return None
+    assert runner._init_progress_bar(smart_progress=False, total_files=10) is None
+
+    # 2. smart_progress = True -> Should initialize a tqdm progress bar
+    with patch("robocopy.runner.tqdm") as mock_tqdm:
+        mock_tqdm.return_value = "MockedProgressBar"
+        pbar = runner._init_progress_bar(smart_progress=True, total_files=10)
+        assert pbar == "MockedProgressBar"
+        mock_tqdm.assert_called_once_with(
+            total=10,
+            unit="file",
+            desc="Sync src",
+        )

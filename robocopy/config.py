@@ -5,6 +5,7 @@
 # Import Statement #
 ####################
 import shlex
+import shutil
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -256,8 +257,7 @@ class RobocopyConfig:
         ValueError
             If the command string does not start with 'robocopy'.
         """
-        tokens = shlex.split(cmd_string, posix=False)
-        tokens = [t.strip('"').strip("'") for t in tokens]
+        tokens = [t.strip('"\'') for t in shlex.split(cmd_string, posix=False)]
         if not tokens or tokens[0].lower() != "robocopy":
             raise ValueError("Command string must start with 'robocopy'")
 
@@ -297,14 +297,16 @@ class RobocopyConfig:
                     i += 1
                     config.selection.exclude_dirs.append(tokens[i])
             else:
-                for prefix, (path, type_func) in _PREFIX_FLAGS.items():
-                    if t.startswith(prefix):
-                        val = type_func(t.split(":", 1)[1])
+                parts = t.split(":", 1)
+                if len(parts) > 1:
+                    prefix = f"{parts[0]}:"
+                    if prefix in _PREFIX_FLAGS:
+                        path, type_func = _PREFIX_FLAGS[prefix]
+                        val = type_func(parts[1])
                         if len(path) == 2 and path[1]:
                             setattr(getattr(config, path[0]), path[1], val)
                         else:
                             setattr(config, path[0], val)
-                        break
 
             i += 1
 
@@ -319,8 +321,9 @@ class RobocopyConfig:
             A list of command-line arguments compatible with subprocess.
         """
         self.validate()
+        executable = shutil.which("robocopy") or "robocopy"
         args = [
-            "robocopy",
+            executable,
             str(self.source),
             str(self.destination),
             self.files,
