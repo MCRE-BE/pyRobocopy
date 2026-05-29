@@ -105,7 +105,7 @@ class RobocopyParser:
         # Check for file status (case-insensitive)
         if match := self._status_re.search(line_stripped):
             status = self._STATUS_MAP[match.group(0).lower()]
-            parts = line_stripped.split()
+            parts = line_stripped.rsplit(maxsplit=2)
             if parts:
                 # In some cases, the last part might be '100%' if it's on the same line
                 path_idx = -1

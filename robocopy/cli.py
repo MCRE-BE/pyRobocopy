@@ -201,12 +201,19 @@ def _handle_windows_backend(args: list[str]) -> RobocopyConfig:
         The initialized `RobocopyConfig` instance.
     """
     # Quote arguments that contain spaces but keep the robocopy prefix
-    cmd_parts = ["robocopy"]
-    for arg in args:
-        if " " in arg and not arg.startswith('"') and not arg.endswith('"'):
-            cmd_parts.append(f'"{arg}"')
-        else:
-            cmd_parts.append(arg)
+    cmd_parts = [
+        "robocopy",
+        *(
+            f'"{arg}"'
+            if " " in arg
+            and not arg.startswith('"')
+            and not arg.endswith(
+                '"',
+            )
+            else arg
+            for arg in args
+        ),
+    ]
     cmd_string = " ".join(cmd_parts)
     return RobocopyConfig.from_command_line(cmd_string)
 
