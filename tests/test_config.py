@@ -214,3 +214,83 @@ def test_import_compatibility_fallback():
 
     # Restore the module state for subsequent tests
     importlib.reload(robocopy.config)
+
+
+def test_find_robocopy_executable_custom_path():
+    """Verify that a valid absolute path returned by shutil.which that is not a wrapper is returned."""
+    from unittest.mock import patch
+
+    from robocopy.config import _find_robocopy_executable
+
+    with patch("shutil.which", return_value="/usr/local/bin/robocopy"), patch("sys.prefix", "/venv"):
+        res = _find_robocopy_executable()
+        assert res == "/usr/local/bin/robocopy"
+
+
+def test_find_robocopy_executable_windows_system32():
+    """Verify that on Windows, if shutil.which returns a Python wrapper, it finds System32/robocopy.exe."""
+    from unittest.mock import patch
+
+    from robocopy.config import _find_robocopy_executable
+
+    # Mock shutil.which to return a wrapper path in sys.prefix
+    wrapper_path = "C:\\my_project\\.venv\\Scripts\\robocopy.exe"
+    with (
+        patch("shutil.which", return_value=wrapper_path),
+        patch("sys.prefix", "C:\\my_project\\.venv"),
+        patch("sys.exec_prefix", "C:\\my_project\\.venv"),
+        patch("sys.platform", "win32"),
+        patch("os.path.exists", return_value=True),
+    ):
+        res = _find_robocopy_executable()
+        # Should return System32 candidate first
+        assert "System32\\robocopy.exe" in res or "System32/robocopy.exe" in res
+
+
+def test_find_robocopy_executable_fallback_path():
+    """Verify that it scans PATH excluding python wrapper folders."""
+    import os
+    from unittest.mock import patch
+
+    from robocopy.config import _find_robocopy_executable
+
+    # Mock shutil.which to return a wrapper path in sys.prefix,
+    # and mock exists for System32 to be False (to trigger fallback)
+    wrapper_path = "/venv/bin/robocopy"
+
+    def mock_exists_side_effect(path):
+        # Fail the Windows system checks
+        return not ("System32" in str(path) or "SysWOW64" in str(path))
+
+    def mock_isfile_side_effect(path):
+        normalized = str(path).replace("\\", "/").lower()
+        return "other/bin/robocopy" in normalized
+
+    with (
+        patch("shutil.which", return_value=wrapper_path),
+        patch("sys.prefix", "/venv"),
+        patch("sys.exec_prefix", "/venv"),
+        patch("sys.platform", "linux"),
+        patch("os.path.exists", side_effect=mock_exists_side_effect),
+        patch("os.path.isfile", side_effect=mock_isfile_side_effect),
+        patch("os.access", return_value=True),
+        patch.dict("os.environ", {"PATH": f"/venv/bin{os.pathsep}/other/bin"}),
+    ):
+        res = _find_robocopy_executable()
+        # Should skip /venv/bin/robocopy and find /other/bin/robocopy
+        assert res.replace("\\", "/").lower().endswith("other/bin/robocopy")
+
+
+def test_find_robocopy_executable_last_resort():
+    """Verify that if all else fails, it returns 'robocopy'."""
+    from unittest.mock import patch
+
+    from robocopy.config import _find_robocopy_executable
+
+    with (
+        patch("shutil.which", return_value=None),
+        patch("sys.platform", "linux"),
+        patch.dict("os.environ", {"PATH": ""}),
+    ):
+        res = _find_robocopy_executable()
+        assert res == "robocopy"

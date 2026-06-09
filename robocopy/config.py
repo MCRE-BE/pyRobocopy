@@ -4,6 +4,7 @@
 ####################
 # Import Statement #
 ####################
+import os
 import shlex
 import shutil
 import sys
@@ -41,6 +42,53 @@ _PREFIX_FLAGS: dict[str, tuple[tuple[str, str], type]] = {
     "/R:": (("retry_count", ""), int),
     "/W:": (("retry_wait", ""), int),
 }
+
+
+def _find_robocopy_executable() -> str:
+    """Resolve the robocopy executable, avoiding Python wrapper scripts.
+
+    Prioritizes the system Windows directories and skips any paths
+    located inside the active virtual environment to prevent infinite loops.
+    """
+    # 1. Check shutil.which first
+    path = shutil.which("robocopy")
+    if path:
+        # If it is just a filename (e.g. mocked in tests), use it directly
+        if not os.path.dirname(path) or os.path.basename(path) == path:
+            return path
+
+        # Check if the found executable is the Python wrapper/virtual environment script
+        path_lower = os.path.abspath(path).lower()
+        py_prefixes = {os.path.abspath(p).lower() for p in (sys.prefix, sys.exec_prefix)}
+        is_python_wrapper = any(path_lower.startswith(p) for p in py_prefixes)
+
+        if not is_python_wrapper:
+            return path
+
+    # 2. If it is the Python wrapper or not found, look for standard system locations on Windows
+    if sys.platform == "win32":
+        system_root = os.environ.get("SystemRoot", "C:\\Windows")
+        for folder in ("System32", "SysWOW64"):
+            candidate = os.path.join(system_root, folder, "robocopy.exe")
+            if os.path.exists(candidate):
+                return candidate
+
+    # 3. Search PATH, skipping directories within Python's environment
+    py_prefixes = {os.path.abspath(p).lower() for p in (sys.prefix, sys.exec_prefix)}
+    path_env = os.environ.get("PATH", "")
+    for d in path_env.split(os.pathsep):
+        if not d:
+            continue
+        d_abs = os.path.abspath(d)
+        if any(d_abs.lower().startswith(p) for p in py_prefixes):
+            continue
+        for ext in (".exe", ".com", ".bat", ".cmd", "") if sys.platform == "win32" else ("",):
+            candidate = os.path.join(d_abs, f"robocopy{ext}")
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
+
+    # Last resort
+    return "robocopy"
 
 
 ###########
@@ -321,7 +369,7 @@ class RobocopyConfig:
             A list of command-line arguments compatible with subprocess.
         """
         self.validate()
-        executable = shutil.which("robocopy") or "robocopy"
+        executable = _find_robocopy_executable()
         args = [
             executable,
             str(self.source),
