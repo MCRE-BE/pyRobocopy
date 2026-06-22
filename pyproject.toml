@@ -20,14 +20,14 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "tqdm>=4.68.1",
+  "tqdm>=4.68.3",
   "typing-extensions>=4.12; python_full_version<'3.11'",
 ]
 optional-dependencies.dev = [
-  "coverage>=7.14",
-  "prek>=0.4.4",
-  "ruff>=0.15.16",
-  "ty>=0.0.44",
+  "coverage>=7.14.2",
+  "prek>=0.4.5",
+  "ruff>=0.15.18",
+  "ty>=0.0.51",
 ]
 optional-dependencies.docs = [
   "mkdocstrings[python]",
@@ -35,7 +35,7 @@ optional-dependencies.docs = [
   "zensical",
 ]
 optional-dependencies.test = [
-  "pytest>=9.0.3",
+  "pytest>=9.1.1",
   "pytest-cov>=7.1",
 ]
 scripts.pyrobocopy = "robocopy.cli:main"
